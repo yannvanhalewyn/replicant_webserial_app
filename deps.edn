@@ -1,7 +1,8 @@
 {:paths ["src"]
- :deps {no.cjohansen/replicant {:mvn/version "2025.06.21"}
-        funcool/promesa {:mvn/version "11.0.678"}}
+ :deps {}
  :aliases
- {:dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}}}
+ {:cljs {:extra-deps {no.cjohansen/replicant {:mvn/version "2025.06.21"}
+                      funcool/promesa {:mvn/version "11.0.678"}}}
+  :dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}}}
   :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "3.2.1"}}
                 :main-opts ["-m" "shadow.cljs.devtools.cli"]}}}

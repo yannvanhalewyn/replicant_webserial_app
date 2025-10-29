@@ -1,6 +1,8 @@
 (ns app.core
-  (:require [replicant.dom :as r]
-            [app.webserial :as serial]))
+  (:require
+    [app.webserial :as serial]
+    [promesa.core :as p]
+    [replicant.dom :as r]))
 
 (defonce state
   (atom {:serial-connected false
@@ -29,17 +31,37 @@
       :on {:click [[:webserial/send-data "Hello from browser!\n"]]}}
      "Send Test Message"]]])
 
-(defn handle-event [_event-data handler-data]
-  (js/console.log "Events fired:" handler-data)
-  (doseq [event handler-data]
-   (case (first event)
-     :webserial/connect
-     (serial/connect! state)
-     :webserial/disconnect (serial/disconnect! state)
-     :webserial/send-data  (serial/send-data! (second event)))))
+(defmulti handle-event (fn [_event-data handler-data] (first handler-data)))
+
+(defmethod handle-event :webserial/connect
+  [_event-data]
+  (-> (serial/connect!)
+    (p/then #(swap! state assoc ::connection %))
+    (p/catch
+      (fn [err]
+        (println "Error connecting:" err)
+        {::error (.-message err)}))))
+
+
+(defmethod handle-event :webserial/disconnect
+  [_event-data event]
+  (-> (serial/disconnect! (::connection @state))
+    (p/then (fn [] (swap! state dissoc ::connection)))
+    (p/catch (fn [err]
+               (println "Error disconecting:" err)))))
+
+(defmethod handle-event :webserial/send-data
+  [_event-data event]
+  (serial/send-data! (::connection @state) (second event)))
+
+;; TODO what to name 'event-data'?
+(defn handle-events [event-data events]
+  (doseq [event events]
+    (js/console.log "Handling event" event)
+    (handle-event event-data event)))
 
 (defn render! []
-  (r/set-dispatch! handle-event)
+  (r/set-dispatch! handle-events)
   (r/render (js/document.getElementById "app")
     (view state)))
 

@@ -1,4 +1,5 @@
-(ns app.webserial)
+(ns app.webserial
+  (:require [promesa.core :as p]))
 
 (defn- webserial-supported? []
   (if (.-serial js/navigator)
@@ -19,40 +20,28 @@
                            (read-loop))))))]
       (read-loop))))
 
-(defn connect! [state]
+(defn connect! []
   (when (webserial-supported?)
     (let [port (js/navigator.serial.requestPort)]
       (-> (.open port #js {:baudRate 9600})
-        (.then
+        (p/then
           (fn []
             (let [reader (.getReader (.-readable port))
                   writer (.getWriter (.-writable port)) ]
               (start-reader-loop! reader)
-              (swap! state assoc
-                ::connection
-                {::port port
-                 ::reader reader
-                 ::writer writer
-                 ::encoder (js/TextEncoder.)}))))
-        (.catch
-          (fn [err]
-           ;; Catches and displays errors in the UI
-            (swap! state assoc
-              :serial-connected false
-              :serial-status (str "Error: " (.-message err)))
-            (println "Error connecting:" err)))))))
+              {::port port
+               ::reader reader
+               ::writer writer
+               ::encoder (js/TextEncoder.)})))))))
 
-(defn disconnect! [state]
-  (when-let [connection (::connection state)]
+(defn disconnect! [connection]
+  (when connection
     (-> (.cancel (::reader connection))
       (.then (fn []
                (.releaseLock (::writer connection))))
       (.then (fn []
                (.close (::port connection))))
-      (.then (fn []
-               (swap! state dissoc ::connection)))
-      (.catch (fn [err]
-                (println "Error disconeccting:" err))))))
+      )))
 
 (defn send-data! [connection data]
   (when-let [writer (::writer connection)]

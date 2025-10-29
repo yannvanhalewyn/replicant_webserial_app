@@ -1,4 +1,4 @@
 {:tasks
- {dev (clojure "-M:dev:shadow-cljs" "watch" "app")
-  build (clojure "-M:dev:shadow-cljs" "release" "app")
-  cljs-repl (clojure "-M:dev:shadow-cljs" "cljs-repl" "app")}}
+ {dev (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")
+  build (clojure "-M:cljs:dev:shadow-cljs" "release" "app")
+  cljs-repl (clojure "-M:cljs:dev:shadow-cljs" "cljs-repl" "app")}}
