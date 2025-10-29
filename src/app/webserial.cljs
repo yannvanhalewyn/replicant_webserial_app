@@ -11,7 +11,9 @@
       (js/alert "WebSerial API is not supported in this browser. Please use Chrome, Edge, or Opera.")
       false)))
 
+(js/console.log "HEllo? test")
 (defn connect! [state-atom]
+  (js/console.log "Connect! 2")
   (when (check-webserial-support)
     (->
      (js/navigator.serial.requestPort)
@@ -23,13 +25,13 @@
                      :serial-connected true
                      :serial-status "Connected")
               (println "Serial port connected!")
-              
+
               ;; Set up reader
               (let [text-decoder (js/TextDecoder.)
                     readable (.-readable @port)
                     rdr (.getReader readable)]
                 (reset! reader rdr)
-                
+
                 ;; Start reading loop
                 (letfn [(read-loop []
                           (-> (.read rdr)
@@ -40,7 +42,7 @@
                                            (println "Received:" text))
                                          (read-loop))))))]
                   (read-loop)))
-              
+
               ;; Set up writer
               (let [text-encoder (js/TextEncoder.)
                     writable (.-writable @port)

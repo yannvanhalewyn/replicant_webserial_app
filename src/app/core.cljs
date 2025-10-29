@@ -2,36 +2,36 @@
   (:require [replicant.dom :as r]
             [app.webserial :as serial]))
 
-(defonce state (atom {:message "Hello, Replicant!"
-                      :serial-connected false
-                      :serial-status "Not connected"}))
+(defonce state
+  (atom {:serial-connected false
+         :serial-status "Not connected"}))
 
 (defn view [state]
   [:div
-   [:h1 (:message state)]
-   [:p "This is a Replicant app with WebSerial API support."]
+   [:h1 "Configuration Portal"]
+   [:p "Please connect to your device"]
 
    [:div.status
-    [:strong "Serial Status: "] (:serial-status state)]
+    [:strong "Serial Status: "] (:serial-status @state)]
 
    [:div
     [:button
-     {:on-click #(serial/connect! state)}
+     {:on {:click #(serial/connect! state)}}
      "Connect to Serial Device"]
 
     [:button
-     {:disabled (not (:serial-connected state))
-      :on-click #(serial/disconnect! state)}
+     {:disabled (not (:serial-connected @state))
+      :on {:click #(serial/disconnect! state)}}
      "Disconnect"]
 
     [:button
-     {:disabled (not (:serial-connected state))
-      :on-click #(serial/send-data! "Hello from browser!\n")}
+     {:disabled (not (:serial-connected @state))
+      :on {:click #(serial/send-data! "Hello from browser!\n")}}
      "Send Test Message"]]])
 
 (defn render! []
   (r/render (js/document.getElementById "app")
-    (view @state)))
+    (view state)))
 
 (defn init! []
   (println "Initializing app...")
