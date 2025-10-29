@@ -33,7 +33,8 @@
   (js/console.log "Events fired:" handler-data)
   (doseq [event handler-data]
    (case (first event)
-     :webserial/connect    (serial/connect! state)
+     :webserial/connect
+     (serial/connect! state)
      :webserial/disconnect (serial/disconnect! state)
      :webserial/send-data  (serial/send-data! (second event)))))
 
@@ -44,6 +45,7 @@
 
 (defn init! []
   (println "Initializing app...")
+  (js/console.log [1 2 :foo/bar])
   (add-watch state ::render
     (fn [_ _ _ _] (render!)))
   (render!))

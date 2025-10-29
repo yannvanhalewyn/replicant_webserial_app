@@ -1,84 +1,64 @@
 (ns app.webserial)
 
-(defonce port (atom nil))
-(defonce reader (atom nil))
-(defonce writer (atom nil))
-
-(defn- check-webserial-support []
+(defn- webserial-supported? []
   (if (.-serial js/navigator)
     true
     (do
       (js/alert "WebSerial API is not supported in this browser. Please use Chrome, Edge, or Opera.")
       false)))
 
-(defn connect! [state-atom]
-  (when (check-webserial-support)
-    (->
-     (js/navigator.serial.requestPort)
-     (.then (fn [selected-port]
-              (reset! port selected-port)
-              (.open selected-port #js {:baudRate 9600})))
-     (.then (fn []
-              (swap! state-atom assoc
-                     :serial-connected true
-                     :serial-status "Connected")
-              (println "Serial port connected!")
+(defn- start-reader-loop! [rdr]
+  (let [text-decoder (js/TextDecoder.)]
+    (letfn [(read-loop []
+              (-> (.read rdr)
+                (.then (fn [result]
+                         (when-not (.-done result)
+                           (let [value (.-value result)
+                                 text (.decode text-decoder value)]
+                             (println "Received:" text))
+                           (read-loop))))))]
+      (read-loop))))
 
-              ;; Set up reader
-              (let [text-decoder (js/TextDecoder.)
-                    readable (.-readable @port)
-                    rdr (.getReader readable)]
-                (reset! reader rdr)
+(defn connect! [state]
+  (when (webserial-supported?)
+    (let [port (js/navigator.serial.requestPort)]
+      (-> (.open port #js {:baudRate 9600})
+        (.then
+          (fn []
+            (let [reader (.getReader (.-readable port))
+                  writer (.getWriter (.-writable port)) ]
+              (start-reader-loop! reader)
+              (swap! state assoc
+                ::connection
+                {::port port
+                 ::reader reader
+                 ::writer writer
+                 ::encoder (js/TextEncoder.)}))))
+        (.catch
+          (fn [err]
+           ;; Catches and displays errors in the UI
+            (swap! state assoc
+              :serial-connected false
+              :serial-status (str "Error: " (.-message err)))
+            (println "Error connecting:" err)))))))
 
-                ;; Start reading loop
-                (letfn [(read-loop []
-                          (-> (.read rdr)
-                              (.then (fn [result]
-                                       (when-not (.-done result)
-                                         (let [value (.-value result)
-                                               text (.decode text-decoder value)]
-                                           (println "Received:" text))
-                                         (read-loop))))))]
-                  (read-loop)))
+(defn disconnect! [state]
+  (when-let [connection (::connection state)]
+    (-> (.cancel (::reader connection))
+      (.then (fn []
+               (.releaseLock (::writer connection))))
+      (.then (fn []
+               (.close (::port connection))))
+      (.then (fn []
+               (swap! state dissoc ::connection)))
+      (.catch (fn [err]
+                (println "Error disconeccting:" err))))))
 
-              ;; Set up writer
-              (let [text-encoder (js/TextEncoder.)
-                    writable (.-writable @port)
-                    wtr (.getWriter writable)]
-                (reset! writer wtr))))
-     (.catch (fn [err]
-               (swap! state-atom assoc
-                      :serial-connected false
-                      :serial-status (str "Error: " (.-message err)))
-               (println "Error connecting:" err))))))
-
-(defn disconnect! [state-atom]
-  (when @port
-    (->
-     (js/Promise.resolve
-      (when @reader
-        (.cancel @reader)
-        (reset! reader nil))
-      (when @writer
-        (.releaseLock @writer)
-        (reset! writer nil)))
-     (.then (fn []
-              (.close @port)))
-     (.then (fn []
-              (reset! port nil)
-              (swap! state-atom assoc
-                     :serial-connected false
-                     :serial-status "Disconnected")
-              (println "Serial port disconnected")))
-     (.catch (fn [err]
-               (println "Error disconnecting:" err))))))
-
-(defn send-data! [data]
-  (when @writer
-    (let [encoder (js/TextEncoder.)
-          encoded (.encode encoder data)]
-      (-> (.write @writer encoded)
-          (.then (fn []
-                   (println "Sent:" data)))
-          (.catch (fn [err]
-                    (println "Error sending data:" err)))))))
+(defn send-data! [connection data]
+  (when-let [writer (::writer connection)]
+    (let [encoded (.encode (::encoder connection) data)]
+      (-> (.write writer encoded)
+        (.then (fn []
+                 (println "Sent:" data)))
+        (.catch (fn [err]
+                  (println "Error sending data:" err)))))))
