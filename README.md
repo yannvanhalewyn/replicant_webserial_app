@@ -23,7 +23,7 @@ yarn
 
 2. Start the development server:
 ```bash
-clj -M:cljs watch app
+bb dev
 ```
 
 3. Open your browser to http://localhost:8080
@@ -59,7 +59,7 @@ The app provides a simple interface to:
 ## Building for Production
 
 ```bash
-clj -M:cljs release app
+bb build
 ```
 
 The compiled JavaScript will be in `public/js/`.
