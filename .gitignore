@@ -1,0 +1,10 @@
+.clj-kondo/
+!.clj-kondo/config.edn
+.cpcache/
+.lsp/.cache/
+.nrepl-port
+.shadow-cljs/
+
+resources/public/app-js/
+resources/public/portfolio-js/
+node_modules/
