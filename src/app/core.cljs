@@ -16,20 +16,29 @@
 
    [:div
     [:button
-     {:on {:click #(serial/connect! state)}}
+     {:on {:click [[:webserial/connect]]}}
      "Connect to Serial Device"]
 
     [:button
      {:disabled (not (:serial-connected @state))
-      :on {:click #(serial/disconnect! state)}}
+      :on {:click [[:webserial/disconnect]]}}
      "Disconnect"]
 
     [:button
      {:disabled (not (:serial-connected @state))
-      :on {:click #(serial/send-data! "Hello from browser!\n")}}
+      :on {:click [[:webserial/send-data "Hello from browser!\n"]]}}
      "Send Test Message"]]])
 
+(defn handle-event [_event-data handler-data]
+  (js/console.log "Events fired:" handler-data)
+  (doseq [event handler-data]
+   (case (first event)
+     :webserial/connect    (serial/connect! state)
+     :webserial/disconnect (serial/disconnect! state)
+     :webserial/send-data  (serial/send-data! (second event)))))
+
 (defn render! []
+  (r/set-dispatch! handle-event)
   (r/render (js/document.getElementById "app")
     (view state)))
 

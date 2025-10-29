@@ -11,9 +11,7 @@
       (js/alert "WebSerial API is not supported in this browser. Please use Chrome, Edge, or Opera.")
       false)))
 
-(js/console.log "HEllo? test")
 (defn connect! [state-atom]
-  (js/console.log "Connect! 2")
   (when (check-webserial-support)
     (->
      (js/navigator.serial.requestPort)
