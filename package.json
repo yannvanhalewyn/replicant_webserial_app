@@ -8,6 +8,6 @@
     "repl": "shadow-cljs cljs-repl app"
   },
   "devDependencies": {
-    "shadow-cljs": "^2.28.0"
+    "shadow-cljs": "^3.2.1"
   }
 }

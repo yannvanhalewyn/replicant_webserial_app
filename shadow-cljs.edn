@@ -1,5 +1,4 @@
-{:source-paths ["src"]
- :dependencies [[replicant "1.5.0"]]
+{:deps {:aliases [:cljs]}
  :dev-http {8080 "public"}
  :builds
  {:app

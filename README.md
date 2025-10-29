@@ -18,12 +18,12 @@ A boilerplate application demonstrating Replicant with WebSerial API integration
 
 1. Install dependencies:
 ```bash
-npm install
+yarn
 ```
 
 2. Start the development server:
 ```bash
-npm run dev
+clj -M:cljs watch app
 ```
 
 3. Open your browser to http://localhost:8080
@@ -59,7 +59,7 @@ The app provides a simple interface to:
 ## Building for Production
 
 ```bash
-npm run build
+clj -M:cljs release app
 ```
 
 The compiled JavaScript will be in `public/js/`.

@@ -5,6 +5,5 @@
 .nrepl-port
 .shadow-cljs/
 
-resources/public/app-js/
-resources/public/portfolio-js/
+public/js/
 node_modules/

@@ -11,20 +11,20 @@
    [:div
     [:h1 (:message state)]
     [:p "This is a Replicant app with WebSerial API support."]
-    
+
     [:div.status
      [:strong "Serial Status: "] (:serial-status state)]
-    
+
     [:div
      [:button
       {:on-click #(serial/connect! state)}
       "Connect to Serial Device"]
-     
+
      [:button
       {:disabled (not (:serial-connected state))
        :on-click #(serial/disconnect! state)}
       "Disconnect"]
-     
+
      [:button
       {:disabled (not (:serial-connected state))
        :on-click #(serial/send-data! "Hello from browser!\n")}
