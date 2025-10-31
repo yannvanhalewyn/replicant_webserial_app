@@ -9,10 +9,12 @@
       false)))
 
 (defn- start-reader-loop! [rdr]
+  (js/console.log "Starging reader loop" rdr)
   (let [text-decoder (js/TextDecoder.)]
     (letfn [(read-loop []
               (-> (.read rdr)
                 (p/then (fn [result]
+                          (js/console.log "Read:" result)
                           (when-not (.-done result)
                             (let [value (.-value result)
                                   text (.decode text-decoder value)]
@@ -22,16 +24,20 @@
 
 (defn connect! []
   (when (webserial-supported?)
-    (let [port (js/navigator.serial.requestPort)]
-      (-> (.open port #js {:baudRate 9600})
-        (p/then
-          #(let [reader (.getReader (.-readable port))
-                 writer (.getWriter (.-writable port)) ]
-             (start-reader-loop! reader)
-             {::port port
-              ::reader reader
-              ::writer writer
-              ::encoder (js/TextEncoder.)}))))))
+    (-> (js/navigator.serial.requestPort)
+      (p/then
+        (fn [selected-port]
+          (-> (.open selected-port #js {:baudRate 9600})
+            (p/then (fn [] selected-port)))))
+      (p/then
+        (fn [port]
+          (let [reader (.getReader (.-readable port))
+                writer (.getWriter (.-writable port))]
+            (start-reader-loop! reader)
+            {::port port
+             ::reader reader
+             ::writer writer
+             ::encoder (js/TextEncoder.)}))))))
 
 (defn disconnect! [connection]
   (when connection
