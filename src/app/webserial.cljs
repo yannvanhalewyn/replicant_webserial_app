@@ -12,12 +12,12 @@
   (let [text-decoder (js/TextDecoder.)]
     (letfn [(read-loop []
               (-> (.read rdr)
-                (.then (fn [result]
-                         (when-not (.-done result)
-                           (let [value (.-value result)
-                                 text (.decode text-decoder value)]
-                             (println "Received:" text))
-                           (read-loop))))))]
+                (p/then (fn [result]
+                          (when-not (.-done result)
+                            (let [value (.-value result)
+                                  text (.decode text-decoder value)]
+                              (println "Received:" text))
+                            (read-loop))))))]
       (read-loop))))
 
 (defn connect! []
@@ -25,29 +25,23 @@
     (let [port (js/navigator.serial.requestPort)]
       (-> (.open port #js {:baudRate 9600})
         (p/then
-          (fn []
-            (let [reader (.getReader (.-readable port))
-                  writer (.getWriter (.-writable port)) ]
-              (start-reader-loop! reader)
-              {::port port
-               ::reader reader
-               ::writer writer
-               ::encoder (js/TextEncoder.)})))))))
+          #(let [reader (.getReader (.-readable port))
+                 writer (.getWriter (.-writable port)) ]
+             (start-reader-loop! reader)
+             {::port port
+              ::reader reader
+              ::writer writer
+              ::encoder (js/TextEncoder.)}))))))
 
 (defn disconnect! [connection]
   (when connection
     (-> (.cancel (::reader connection))
-      (.then (fn []
-               (.releaseLock (::writer connection))))
-      (.then (fn []
-               (.close (::port connection))))
-      )))
+      (p/then #(.releaseLock (::writer connection)))
+      (p/then #(.close (::port connection))))))
 
 (defn send-data! [connection data]
   (when-let [writer (::writer connection)]
     (let [encoded (.encode (::encoder connection) data)]
       (-> (.write writer encoded)
-        (.then (fn []
-                 (println "Sent:" data)))
-        (.catch (fn [err]
-                  (println "Error sending data:" err)))))))
+        (p/then #(println "Sent:" data))
+        (p/catch #(println "Error sending data:" %))))))
