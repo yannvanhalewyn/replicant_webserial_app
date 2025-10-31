@@ -9,17 +9,17 @@
       false)))
 
 (defn- start-reader-loop! [rdr]
-  (js/console.log "Starging reader loop" rdr)
+  (js/console.log "Starting reader loop" rdr)
   (let [text-decoder (js/TextDecoder.)]
     (letfn [(read-loop []
               (-> (.read rdr)
                 (p/then (fn [result]
-                          (js/console.log "Read:" result)
-                          (when-not (.-done result)
+                          (if (.-done result)
+                            (println "Closing reader loop")
                             (let [value (.-value result)
                                   text (.decode text-decoder value)]
-                              (println "Received:" text))
-                            (read-loop))))))]
+                              (println "Received:" text)
+                              (read-loop)))))))]
       (read-loop))))
 
 (defn connect! []

@@ -1,76 +1,63 @@
 (ns app.core
   (:require
+    [app.db :as db]
+    [app.views.configurations :as configurations]
+    [app.views.home :as home]
+    [app.views.nav :as nav]
     [app.webserial :as serial]
     [promesa.core :as p]
+    [reitit.frontend :as rf]
+    [reitit.frontend.easy :as rfe]
     [replicant.dom :as r]))
 
 (defonce state
-  (atom {:serial-status "Not Connected"}))
+  (atom {:serial-status "Not Connected"
+         ::current-route nil}))
 
-(defn- connected? [state]
-  (contains? state ::connection))
+(def routes
+  [["/" :route/home]
+   ["/configurations" :route/configurations]])
 
 (defn view [state]
   [:div
-   [:h1 "Configuration Portal"]
-   [:p "Please connect to your device"]
+   (nav/component)
+   (case (-> @state ::current-route :data :name)
+     :route/home (home/page @state)
+     :route/configurations (configurations/page @state)
+     [:div [:h1 "Not Found"]])])
 
-   [:div.status
-    [:strong "Serial Status: "]
-    (:serial-status @state)]
-
-   [:div
-    [:button
-     {:on {:click [[:webserial/connect]]}}
-     "Connect to Serial Device"]
-
-    [:button
-     {:disabled (not (connected? @state))
-      :on {:click [[:webserial/disconnect]]}}
-     "Disconnect"]
-
-    [:button
-     {:disabled (not (connected? @state))
-      :on {:click [[:webserial/send-data "Hello from browser!\n"]]}}
-     "Send Test Message"]]])
-
-(defmulti handle-event (fn [_event-data handler-data]
-                         (first handler-data)))
+(defmulti handle-event
+  (fn [_event-data event-vec]
+    (first event-vec)))
 
 (defmethod handle-event :webserial/connect
-  [_event-data]
+  [_event-data _event]
   (-> (serial/connect!)
     (p/then #(do
                (js/console.log "Connected:" %)
                (swap! state assoc
                  :serial-status "Connected"
-                 ::connection %)))
+                 ::db/connection %)))
     (p/catch
       (fn [err]
         (println "Error connecting:" err)
-        {::error (.-message err)
-         :serial-status (str "Error: " (.-message err))}))))
+        {:serial-status (str "Error: " (.-message err))}))))
 
 (defmethod handle-event :webserial/disconnect
   [_event-data _event]
-  (-> (serial/disconnect! (::connection @state))
+  (-> (serial/disconnect! (::db/connection @state))
     (p/then (fn []
               (swap! state
                 #(-> %
-                   (dissoc ::connection)
+                   (dissoc ::db/connection)
                    (assoc :serial-status "Not Connected")))))
-    (p/catch (fn [err]
-               (println "Error disconecting:" err)))))
+    (p/catch #(println "Error disconecting:" %))))
 
 (defmethod handle-event :webserial/send-data
   [_event-data event]
-  (serial/send-data! (::connection @state) (second event)))
+  (serial/send-data! (::db/connection @state) (second event)))
 
-;; TODO what to name 'event-data'?
 (defn handle-events [event-data events]
-  (js/console.log "Event"
-    {:event-data event-data
-     :events events})
   (doseq [event events]
     (js/console.log "Handling event" event)
     (handle-event event-data event)))
@@ -80,10 +67,16 @@
   (r/render (js/document.getElementById "app")
     (view state)))
 
+(defn- on-navigate [new-match]
+  (swap! state assoc ::current-route new-match))
+
 (defn init! []
-  (println "Initializing app...")
   (add-watch state ::render
     (fn [_ _ _ _] (render!)))
+  (rfe/start!
+    (rf/router routes)
+    on-navigate
+    {:use-fragment false})
   (render!))
 
 (defn reload! []
