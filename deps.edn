@@ -3,7 +3,9 @@
  :aliases
  {:cljs {:extra-deps {metosin/reitit {:mvn/version "0.9.2"}
                       no.cjohansen/replicant {:mvn/version "2025.06.21"}
-                      funcool/promesa {:mvn/version "11.0.678"}}}
+                       funcool/promesa {:mvn/version "11.0.678"}
+                       metosin/malli {:mvn/version "0.16.4"}
+                       com.cognitect/transit-cljs {:mvn/version "0.8.280"}}}
   :dev {:extra-paths ["env/dev"]
         :extra-deps {binaryage/devtools {:mvn/version "1.0.7"}}}
   :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "3.2.1"}}

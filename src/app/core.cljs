@@ -1,18 +1,25 @@
 (ns app.core
   (:require
     [app.db :as db]
+    [app.configuration :as configuration]
+    [app.storage :as storage]
     [app.views.configurations :as configurations]
     [app.views.home :as home]
     [app.views.nav :as nav]
     [app.webserial :as serial]
+    [clojure.walk :as walk]
     [promesa.core :as p]
     [reitit.frontend :as rf]
     [reitit.frontend.easy :as rfe]
-    [replicant.dom :as r]))
+    [replicant.dom :as r]
+    [app.tools.utils :as u]))
 
 (defonce state
   (atom {:serial-status "Not Connected"
-         ::current-route nil}))
+         ::current-route nil
+         ::db/configurations (storage/load-configurations)
+         ::db/editing-configuration nil
+         ::db/validation-errors nil}))
 
 (def routes
   [["/"
@@ -20,13 +27,23 @@
      :render home/page}]
    ["/configurations"
     {:name :route/configurations
+     :render configurations/page}]
+   ["/configurations/new"
+    {:name :route/configurations-new
+     :render configurations/new-page}]
+   ["/configurations/:id/edit"
+    {:name :route/configurations-edit
      :render configurations/page}]])
 
-(defmulti handle-event
+(defmulti execute-action
   (fn [_event-data event-vec]
     (first event-vec)))
 
-(defmethod handle-event :webserial/connect
+(defmethod execute-action :event/prevent-default
+  [event-data _]
+  (.preventDefault (:replicant/js-event event-data)))
+
+(defmethod execute-action :webserial/connect
   [_event-data _event]
   (-> (serial/connect!)
     (p/then #(do
@@ -39,7 +56,7 @@
         (println "Error connecting:" err)
         {:serial-status (str "Error: " (.-message err))}))))
 
-(defmethod handle-event :webserial/disconnect
+(defmethod execute-action :webserial/disconnect
   [_event-data _event]
   (-> (serial/disconnect! (::db/connection @state))
     (p/then (fn []
@@ -49,14 +66,81 @@
                    (assoc :serial-status "Not Connected")))))
     (p/catch #(println "Error disconecting:" %))))
 
-(defmethod handle-event :webserial/send-data
+(defmethod execute-action :webserial/send-data
   [_event-data event]
   (serial/send-data! (::db/connection @state) (second event)))
 
-(defn handle-events [event-data events]
-  (doseq [event events]
-    (js/console.log "Handling event" event)
-    (handle-event event-data event)))
+(defmethod execute-action :configuration/new
+  [_event-data _event]
+  (swap! state assoc
+    ::db/editing-configuration
+    (configuration/new-configuration (::db/configurations @state))
+    ::db/validation-errors nil))
+
+(defmethod execute-action :configuration/edit
+  [_event-data [_ config]]
+  (swap! state assoc
+    ::db/editing-configuration config
+    ::db/validation-errors nil))
+
+(defmethod execute-action :configuration/cancel-edit
+  [_event-data _event]
+  (swap! state assoc
+    ::db/editing-configuration nil
+    ::db/validation-errors nil)
+  (rfe/push-state :route/configurations))
+
+(defmethod execute-action :configuration-form/update-field
+  [_event-data [_ field value]]
+  (swap! state
+    (fn [s]
+      (let [base-config (or (::db/editing-configuration s)
+                          (configuration/new-configuration (::db/configurations s)))
+            new-config (assoc base-config field value)]
+        (assoc s
+          ::db/editing-configuration new-config
+          ::db/validation-errors (configuration/validate new-config))))))
+
+(defmethod execute-action :configuration/save
+  [_event-data [_ config]]
+  (let [validation-result (configuration/validate config)]
+    (if validation-result
+      (swap! state assoc ::db/validation-errors validation-result)
+      (do
+        (swap! state
+          (fn [s]
+            (let [configs (assoc (::db/configurations s)
+                            (:configuration/id config)
+                            config)]
+              (storage/save-configurations! configs)
+              (-> s
+                (assoc-in [::db/configurations (:configuration/id config)] config)
+                (assoc ::db/editing-configuration nil)
+                (assoc ::db/validation-errors nil)))))
+        (rfe/push-state :route/configurations)))))
+
+(defmethod execute-action :configuration/delete
+  [_event-data [_ config-id]]
+  (swap! state
+    (fn [s]
+      (let [configs (dissoc (::db/configurations s) config-id)]
+        (storage/save-configurations! configs)
+        (assoc s ::db/configurations configs)))))
+
+(defn interpolate [event-data events]
+  (walk/postwalk
+    (fn [x]
+      (case x
+        :event/target.value (.. (:replicant/dom-event event-data) -target -value)
+        :event/target.value.int (u/parse-int (.. (:replicant/dom-event event-data) -target -value))
+        x))
+    events))
+
+(defn handle-events [event-data actions]
+  (doseq [action (interpolate event-data actions)]
+    (when action ;; Allow for ignorable nil actions
+      (js/console.log "Handling action" action)
+      (execute-action event-data action))))
 
 (defn render! []
   (r/set-dispatch! handle-events)

@@ -15,10 +15,10 @@
               (-> (.read rdr)
                 (p/then (fn [result]
                           (if (.-done result)
-                            (println "Closing reader loop")
+                            (js/console.log "Closing reader loop")
                             (let [value (.-value result)
                                   text (.decode text-decoder value)]
-                              (println "Received:" text)
+                              (js/console.log "Received:" text)
                               (read-loop)))))))]
       (read-loop))))
 
