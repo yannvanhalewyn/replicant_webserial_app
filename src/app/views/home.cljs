@@ -4,7 +4,7 @@
 
 (defn page [state]
   [:div
-   [:h1 "Configuration Portal"]
+   [:h1 "Configuration Panel"]
    [:p "Please connect to your device"]
 
    [:div.status

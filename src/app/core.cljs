@@ -15,16 +15,12 @@
          ::current-route nil}))
 
 (def routes
-  [["/" :route/home]
-   ["/configurations" :route/configurations]])
-
-(defn view [state]
-  [:div
-   (nav/component)
-   (case (-> @state ::current-route :data :name)
-     :route/home (home/page @state)
-     :route/configurations (configurations/page @state)
-     [:div [:h1 "Not Found"]])])
+  [["/"
+    {:name :route/home
+     :render home/page}]
+   ["/configurations"
+    {:name :route/configurations
+     :render configurations/page}]])
 
 (defmulti handle-event
   (fn [_event-data event-vec]
@@ -65,7 +61,13 @@
 (defn render! []
   (r/set-dispatch! handle-events)
   (r/render (js/document.getElementById "app")
-    (view state)))
+    [:div
+     (nav/component)
+     (if-let [render (-> @state ::current-route :data :render)]
+       (render state)
+       [:div [:h1 "Not Found"]
+        [:a {:href (rfe/href :route/home)}
+         "Back to home"]])]))
 
 (defn- on-navigate [new-match]
   (swap! state assoc ::current-route new-match))
