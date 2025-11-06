@@ -2,14 +2,12 @@
   (:require
     [cognitect.transit :as t]))
 
-(def ^:private storage-key "replicant-webserial-configurations")
-
 (def ^:private transit-writer (t/writer :json))
 (def ^:private transit-reader (t/reader :json))
 
-(defn load-configurations
+(defn load!
   "Loads configurations from LocalStorage. Returns a map of {id configuration} or empty map if none found."
-  []
+  [storage-key]
   (try
     (if-let [stored-data (js/localStorage.getItem storage-key)]
       (let [parsed (t/read transit-reader stored-data)]
@@ -21,11 +19,10 @@
       (js/console.warn "Error loading configurations from LocalStorage:" e)
       {})))
 
-(defn save-configurations!
-  "Saves configurations to LocalStorage. Takes a map of {id configuration}."
-  [configurations]
+(defn store!
+  [storage-key data]
   (try
-    (let [serialized (t/write transit-writer configurations)]
+    (let [serialized (t/write transit-writer data)]
       (js/localStorage.setItem storage-key serialized))
     (catch js/Error e
       (js/console.error "Error saving configurations to LocalStorage:" e))))

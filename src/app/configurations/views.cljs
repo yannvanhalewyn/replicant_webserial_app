@@ -110,8 +110,8 @@
    [:div {:style {:display "flex" :gap "0.5rem"}}
     [:a {:href (rfe/href :configurations.routes/index)}
      "Cancel"]
-    [:button (when (seq validation-errors)
-               {:disabled true})
+    [:button (cond-> {}
+               (seq validation-errors) (assoc :disabled true))
      "Save"]]])
 
 (defn new-page [state]

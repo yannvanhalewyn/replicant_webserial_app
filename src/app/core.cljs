@@ -16,23 +16,25 @@
     home.routes/routes
     configurations.routes/routes))
 
-(defn interpolate [event-data events]
+(defn interpolate [event-data actions]
   (walk/postwalk
     (fn [x]
       (case x
         :event/target.value (.. (:replicant/dom-event event-data) -target -value)
         :event/target.value.int (u/parse-int (.. (:replicant/dom-event event-data) -target -value))
         x))
-    events))
+    actions))
 
-(defn handle-events [event-data actions]
-  (doseq [action (interpolate event-data actions)]
-    (when action ;; Allow for ignorable nil actions
-      (js/console.log "Handling action" action)
-      (db/execute-action event-data action))))
+(defn handle-actions [event-data actions]
+  (let [db @db/app-db
+        effects (->> (interpolate event-data actions)
+                  (mapcat #(db/action->effects {:db db} %)))]
+    (doseq [effect effects]
+      (when effect ;; Allow for ignorable nil effects
+        (db/execute-effect event-data effect)))))
 
 (defn render! []
-  (r/set-dispatch! handle-events)
+  (r/set-dispatch! handle-actions)
   (r/render (js/document.getElementById "app")
     (layout/component {}
       (if-let [render (-> @db/app-db ::db/current-route :data :render)]
