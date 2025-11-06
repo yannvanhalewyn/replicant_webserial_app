@@ -6,7 +6,7 @@ A boilerplate application demonstrating Replicant with WebSerial API integration
 
 1. Install dependencies:
 ```bash
-yarn
+yarn install
 ```
 
 2. Start the development server:

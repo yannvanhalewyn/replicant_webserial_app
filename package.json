@@ -1,0 +1,14 @@
+{
+  "name": "replicant-webserial",
+  "version": "1.0.0",
+  "description": "Replicant WebSerial Application",
+  "scripts": {
+    "css:build": "tailwindcss -i ./resources/css/main.css -o ./public/css/main.css",
+    "css:watch": "tailwindcss -i ./resources/css/main.css -o ./public/css/main.css --watch",
+    "css:prod": "tailwindcss -i ./resources/css/main.css -o ./public/css/main.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0-beta.10",
+    "tailwindcss": "^4.0.0-beta.10"
+  }
+}

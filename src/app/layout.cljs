@@ -1,8 +1,8 @@
 (ns app.layout
   (:require
-   [app.db :as db]
-   [app.device.db :as device.db]
-   [reitit.frontend.easy :as rfe]))
+    [app.db :as db]
+    [app.device.db :as device.db]
+    [reitit.frontend.easy :as rfe]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Sidebar Navigation
@@ -10,10 +10,11 @@
 (defn- nav-item
   [{:keys [href icon label active?]}]
   [:a {:href href
-       :class (str "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors "
+       :class (concat
+                '[flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ]
                 (if active?
-                  "bg-primary-600 text-white border-l-4 border-white"
-                  "text-slate-300 hover:bg-slate-700 hover:text-white border-l-4 border-transparent"))}
+                  '[bg-primary-600 text-white border-l-4 border-white]
+                  '[text-slate-300 hover:bg-slate-700 hover:text-white border-l-4 border-transparent]))}
    [:span.text-lg icon]
    [:span label]])
 
@@ -25,7 +26,7 @@
       [:div.w-10.h-10.bg-primary-600.rounded-lg.flex.items-center.justify-center
        [:span.text-white.text-xl.font-bold "R"]]
       [:div
-       [:h1.text-white.text-lg.font-bold.leading-none "Replicant"]
+       [:h1.text-white.text-lg.font-bold.leading-none "Configurator"]
        [:p.text-slate-400.text-xs "WebSerial"]]]
 
      [:nav.flex-1.px-3.py-6.space-y-1
@@ -41,12 +42,12 @@
                  :icon "⚙️"
                  :label "Configurations"
                  :active? (contains? #{:configurations.routes/index
-                                      :configurations.routes/new
-                                      :configurations.routes/edit}
-                                    route-name)})]
+                                       :configurations.routes/new
+                                       :configurations.routes/edit}
+                            route-name)})]
 
      [:div.px-4.py-4.border-t.border-slate-700
-      [:div.text-xs.text-slate-500 "v1.0.0"]]]))
+      [:div.text-xs.text-slate-500 "v0.0.1-alpha"]]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Breadcrumbs
@@ -58,8 +59,8 @@
     [:span.flex.items-center.gap-2
      [:a.text-slate-600.hover:text-slate-900.transition-colors
       {:href (if route
-              (apply rfe/href route)
-              href)}
+               (apply rfe/href route)
+               href)}
       label]
      [:span.text-slate-400 "/"]]))
 
@@ -81,11 +82,11 @@
         error (::device.db/error state)]
     [:div.flex.items-center.gap-3
      [:div.flex.items-center.gap-2
-      [:div {:class (str "w-2.5 h-2.5 rounded-full "
-                      (cond
-                        connected? "bg-green-500 animate-pulse"
-                        error "bg-red-500"
-                        :else "bg-slate-300"))}]
+      [:div {:class (concat '[w-2.5 h-2.5 rounded-full]
+                         (cond
+                           connected? '[bg-green-500 animate-pulse]
+                           error '[bg-red-500]
+                           :else '[bg-slate-300]))}]
       [:span.text-sm.font-medium.text-slate-700
        (cond
          connected? "Connected"
@@ -93,10 +94,10 @@
          :else "Not Connected")]]
 
      (if connected?
-       [:button.px-3.py-1.text-xs.font-medium.text-slate-700.bg-white.border.border-slate-300.rounded-md.hover:bg-slate-50.transition-colors
+       [:button.btn-secondary.px-3.py-1.text-xs
         {:on {:click [[::device.db/disconnect]]}}
         "Disconnect"]
-       [:button.px-3.py-1.text-xs.font-medium.text-white.bg-primary-600.rounded-md.hover:bg-primary-700.transition-colors
+       [:button.btn-primary.px-3.py-1.text-xs
         {:on {:click [[::device.db/connect]]}}
         "Connect Device"])]))
 

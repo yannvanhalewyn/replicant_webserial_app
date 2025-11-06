@@ -6,4 +6,5 @@
 .shadow-cljs/
 
 public/js/
+public/css/
 node_modules/

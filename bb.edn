@@ -1,4 +1,19 @@
 {:tasks
- {dev (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")
-  build (clojure "-M:cljs:dev:shadow-cljs" "release" "app")
-  cljs-repl (clojure "-M:cljs:dev:shadow-cljs" "cljs-repl" "app")}}
+ {;; CSS tasks
+  css:build (shell "npx tailwindcss -i ./resources/css/main.css -o ./public/css/main.css")
+  css:watch (shell "npx tailwindcss -i ./resources/css/main.css -o ./public/css/main.css --watch")
+
+  ;; ClojureScript tasks
+  cljs:dev (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")
+  cljs:build (clojure "-M:cljs:dev:shadow-cljs" "release" "app")
+  cljs-repl (clojure "-M:cljs:dev:shadow-cljs" "cljs-repl" "app")
+
+  ;; Combined tasks
+  dev {:doc "Start dev server (NOTE: Run 'bb css:watch' in a separate terminal for CSS hot-reload)"
+       :depends [css:build]
+       :task (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")}
+
+  build {:doc "Build production bundle"
+         :task (do
+                 (shell "npx tailwindcss -i ./resources/css/main.css -o ./public/css/main.css --minify")
+                 (clojure "-M:cljs:dev:shadow-cljs" "release" "app"))}}}

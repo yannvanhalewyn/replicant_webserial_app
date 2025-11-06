@@ -15,15 +15,15 @@
         [:p.text-slate-600.mb-8 "Connect your device and manage configurations"]
 
         [:div.grid.gap-6.md:grid-cols-2.lg:grid-cols-3.mb-8
-         ;; Quick Stats / Info Cards
-         [:div.bg-white.rounded-lg.shadow-sm.border.border-slate-200.p-6
+          ;; Quick Stats / Info Cards
+         [:div.stat-card
           [:div.flex.items-center.gap-3.mb-2
            [:span.text-2xl "⚙️"]
            [:h3.text-sm.font-medium.text-slate-600 "Configurations"]]
           [:p.text-3xl.font-bold.text-slate-900
            (count (get state :app.db/configurations {}))]]
 
-         [:div.p-6.bg-white.rounded-lg.shadow-sm.border.border-slate-200
+         [:div.stat-card
           [:div.mb-2.flex.items-center.gap-3
            [:span.text-2xl "🔌"]
            [:h3.text-sm.font-medium.text-slate-600 "Device Status"]]
@@ -35,7 +35,7 @@
              "Connected"
              "Not Connected")]]
 
-         [:div.p-6.bg-white.rounded-lg.shadow-sm.border.border-slate-200
+         [:div.stat-card
           [:div.flex.items-center.gap-3.mb-2
            [:span.text-2xl "📡"]
            [:h3.text-sm.font-medium.text-slate-600 "WebSerial API"]]
