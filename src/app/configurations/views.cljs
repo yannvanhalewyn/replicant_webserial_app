@@ -57,6 +57,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Form
 
+(defn- format-number [n]
+  (.format (js/Intl.NumberFormat "en-US") n))
+
+(defn- range-slider [{:keys [form-data errors key label unit min max]}]
+  [:div
+   [:label.label
+    [:span label]
+    [:span.text-primary-600.font-semibold
+     (format-number (get form-data key)) " " unit]]
+   [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
+    {:type "range"
+     :min min
+     :max max
+     :step 1
+     :value (get form-data key)
+     :class "range-slider"
+     :on {:input [[::configurations.db/update-form-field key [:event/target.value.int]]]}}]
+   [:div.flex.justify-between.text-xs.text-slate-500.mt-1
+    [:span (str (format-number min) " " unit)]
+    [:span (str (format-number max) " " unit)]]
+   (when-let [field-errors (get errors key)]
+     (for [error field-errors]
+       [:p.text-sm.text-red-600.mt-1 error]))])
+
 (defn- form
   [{:keys [config errors on-save]}]
   [:form.card
@@ -77,65 +101,32 @@
        (for [error field-errors]
          [:p.text-sm.text-red-600.mt-1 error]))]
 
-    [:div
-     [:label.label
-      [:span "Min Frequency: "]
-      [:span.text-primary-600.font-semibold
-       (:configuration/min-frequency config) " Hz"]]
-     [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
-      {:type "range"
+    (range-slider
+      {:form-data config
+       :key :configuration/min-frequency
+       :errors errors
+       :label "Min Frequency: "
+       :unit "Hz"
        :min 0
-       :max 20000
-       :step 1
-       :value (:configuration/min-frequency config)
-       :class "range-slider"
-       :on {:input [[::configurations.db/update-form-field :configuration/min-frequency [:event/target.value.int]]]}}]
-     [:div.flex.justify-between.text-xs.text-slate-500.mt-1
-      [:span "0 Hz"]
-      [:span "20,000 Hz"]]
-     (when-let [field-errors (:configuration/min-frequency errors)]
-       (for [error field-errors]
-         [:p.text-sm.text-red-600.mt-1 error]))]
+       :max 20000})
 
-    [:div
-     [:label.block.text-sm.font-medium.text-slate-900.mb-2
-      [:span "Max Frequency: "]
-      [:span.text-primary-600.font-semibold
-       (:configuration/max-frequency config) " Hz"]]
-     [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
-      {:type "range"
+    (range-slider
+      {:form-data config
+       :key :configuration/max-frequency
+       :errors errors
+       :label "Max Frequency: "
+       :unit "Hz"
        :min 0
-       :max 20000
-       :step 1
-       :value (:configuration/max-frequency config)
-       :class "range-slider"
-       :on {:input [[::configurations.db/update-form-field :configuration/max-frequency [:event/target.value.int]]]}}]
-     [:div.flex.justify-between.text-xs.text-slate-500.mt-1
-      [:span "0 Hz"]
-      [:span "20,000 Hz"]]
-     (when-let [field-errors (:configuration/max-frequency errors)]
-       (for [error field-errors]
-         [:p.text-sm.text-red-600.mt-1 error]))]
+       :max 20000})
 
-     [:div
-      [:label.block.text-sm.font-medium.text-slate-900.mb-2
-       [:span "Volume: "]
-       [:span.text-primary-600.font-semibold
-        (:configuration/volume config) "%"]]
-      [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
-       {:type "range"
-        :min 0
-        :max 100
-        :step 1
-        :value (:configuration/volume config)
-        :class "range-slider"
-        :on {:input [[::configurations.db/update-form-field :configuration/volume [:event/target.value.int]]]}}]
-      [:div.flex.justify-between.text-xs.text-slate-500.mt-1
-       [:span "0%"]
-       [:span "100%"]]
-      (when-let [field-errors (:configuration/volume errors)]
-        (for [error field-errors]
-          [:p.text-sm.text-red-600.mt-1 error]))]
+    (range-slider
+      {:form-data config
+       :key :configuration/volume
+       :errors errors
+       :label "Volume: "
+       :unit "%"
+       :min 0
+       :max 100})
 
     (when errors
       [:div.alert-error

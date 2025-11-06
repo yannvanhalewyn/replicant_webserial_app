@@ -16,7 +16,7 @@
       [:configuration/volume [:int {:min 0 :max 100}]]]
      [:fn
       {:error/message "Max frequency must be greater than or equal to min frequency"
-       :error/path [:configuration/min-frequency]}
+       :error/path [:configuration/max-frequency]}
       (fn [{:configuration/keys [min-frequency max-frequency]}]
         (<= min-frequency max-frequency))]]))
 
