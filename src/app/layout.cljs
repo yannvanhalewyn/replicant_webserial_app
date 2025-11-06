@@ -104,6 +104,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main Layout
 
+(defn not-found []
+  [:div
+   [:h1.text-2xl.font-bold.text-slate-900 "Page Not Found"]
+   [:p.text-slate-600.mt-2 "The page you're looking for doesn't exist."]
+   [:a.text-primary-600.hover:text-primary-700.mt-4.inline-block
+    {:href "/"}
+    "← Back to home"]])
+
 (defn component [state & children]
   (let [current-route (::db/current-route state)]
     [:div.flex.h-screen.bg-slate-50

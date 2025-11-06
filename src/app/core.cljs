@@ -24,12 +24,7 @@
       (layout/component state
         (if-let [render (-> state ::db/current-route :data :render)]
           (render state)
-          [:div
-           [:h1.text-2xl.font-bold.text-slate-900 "Page Not Found"]
-           [:p.text-slate-600.mt-2 "The page you're looking for doesn't exist."]
-           [:a.text-primary-600.hover:text-primary-700.mt-4.inline-block
-            {:href "/"}
-            "← Back to home"]])))))
+          (layout/not-found))))))
 
 (defn- on-navigate [new-match]
   (db/dispatch! {} [[:route/on-navigate new-match]]))

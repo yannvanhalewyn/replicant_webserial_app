@@ -10,18 +10,21 @@
   [:map
    [:configuration/id :uuid]
    [:configuration/name [:string {:min 1}]]
-   [:configuration/min-frequency [:int {:min 0
-                                        :max 20000
-                                        :form/unit "Hz"
-                                        :form/label "Min Frequency"}]]
-   [:configuration/max-frequency [:int {:min 0
-                                        :max 20000
-                                        :form/unit "Hz"
-                                        :form/label "Max Frequency"}]]
-   [:configuration/volume [:int {:min 0
-                                 :max 100
-                                 :form/unit "%"
-                                 :form/label "Volume"}]]])
+   [:configuration/min-frequency
+    [:int {:min 0
+           :max 20000
+           :form/unit "Hz"
+           :form/label "Min Frequency"}]]
+   [:configuration/max-frequency
+    [:int {:min 0
+           :max 20000
+           :form/unit "Hz"
+           :form/label "Max Frequency"}]]
+   [:configuration/volume
+    [:int {:min 0
+           :max 100
+           :form/unit "%"
+           :form/label "Volume"}]]])
 
 (def Configuration
   (m/schema
@@ -35,7 +38,8 @@
 
 (defn- new-configuration-name
   "Generates a default configuration name based on existing configurations.
-  Will look for the highest 'Configuration N' name and return 'Configuration N+1'."
+  Will look for the highest pre-existing 'Configuration N' name and return
+  'Configuration N+1'."
   [configurations]
   (let [existing-numbers
         (into #{}
