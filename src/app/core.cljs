@@ -1,6 +1,7 @@
 (ns app.core
   (:require
     [app.configurations.routes :as configurations.routes]
+    [app.configurations.db :as configurations.db]
     [app.db :as db]
     [app.home.routes :as home.routes]
     [app.layout :as layout]
@@ -34,6 +35,7 @@
     (rf/router routes {:data {:coercion rcm/coercion}})
     on-navigate
     {:use-fragment false})
+  (db/dispatch! {} [[::configurations.db/init]])
   (render!))
 
 (defn reload! []

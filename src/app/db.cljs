@@ -44,13 +44,17 @@
   [_ [_ new-db]]
   (reset! app-db new-db))
 
+(defmethod execute-effect! :route/push
+  [_ [_ route-name params query-params]]
+  (rfe/push-state route-name params query-params))
+
 (defmethod execute-effect! :storage/save
   [_ [_ storage-key data]]
   (storage/store! storage-key data))
 
-(defmethod execute-effect! :route/push
-  [_ [_ route-name params query-params]]
-  (rfe/push-state route-name params query-params))
+(defmethod execute-effect! :storage/load
+  [_ [_ storage-key db-key]]
+  (swap! app-db assoc db-key (storage/load! storage-key)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dispatch

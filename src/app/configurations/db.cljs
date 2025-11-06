@@ -6,6 +6,10 @@
 
 (def ^:private STORAGE_KEY "demo-app-configurations")
 
+(defmethod db/action->effects ::init
+  [_ _]
+  [[:storage/load STORAGE_KEY ::db/configurations]])
+
 (defmethod db/action->effects ::update-form-field
   [{:keys [db]} [_ field value]]
   (let [new-config (assoc (::current-configuration db) field value)]
