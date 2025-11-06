@@ -1,11 +1,11 @@
 (ns app.configurations.views
   (:require
-   [app.configurations.configuration :as configuration]
-   [app.configurations.db :as configurations.db]
-   [app.device.db :as device.db]
-   [malli.core :as m]
-   [malli.util :as mu]
-   [reitit.frontend.easy :as rfe]))
+    [app.configurations.configuration :as configuration]
+    [app.configurations.db :as configurations.db]
+    [app.device.db :as device.db]
+    [malli.core :as m]
+    [malli.util :as mu]
+    [reitit.frontend.easy :as rfe]))
 
 (defn- configuration-item [config]
   [:div.card-hover
@@ -71,25 +71,25 @@
 (defn- range-slider [{:keys [form-data errors key]}]
   (let [schema-props (m/properties (mu/get configuration/BaseSchema key))
         unit (:form/unit schema-props)]
-   [:div
-    [:label.label
-     [:span (:form/label schema-props) " "]
-     [:span.text-primary-600.font-semibold
-      (format-number (get form-data key)) " " unit]]
-    [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
-     {:type "range"
-      :min (:min schema-props)
-      :max (:max schema-props)
-      :step 1
-      :value (get form-data key)
-      :class "range-slider"
-      :on {:input [[::configurations.db/update-form-field key [:event/target.value.int]]]}}]
-    [:div.flex.justify-between.text-xs.text-slate-500.mt-1
-     [:span (str (format-number (:min schema-props)) " " unit)]
-     [:span (str (format-number (:max schema-props)) " " unit)]]
-    (when-let [field-errors (get errors key)]
-      (for [error field-errors]
-        [:p.text-sm.text-red-600.mt-1 error]))]))
+    [:div
+     [:label.label
+      [:span (:form/label schema-props) " "]
+      [:span.text-primary-600.font-semibold
+       (format-number (get form-data key)) " " unit]]
+     [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
+      {:type "range"
+       :min (:min schema-props)
+       :max (:max schema-props)
+       :step 1
+       :value (get form-data key)
+       :class "range-slider"
+       :on {:input [[::configurations.db/update-form-field key [:event/target.value.int]]]}}]
+     [:div.flex.justify-between.text-xs.text-slate-500.mt-1
+      [:span (str (format-number (:min schema-props)) " " unit)]
+      [:span (str (format-number (:max schema-props)) " " unit)]]
+     (when-let [field-errors (get errors key)]
+       (for [error field-errors]
+         [:p.text-sm.text-red-600.mt-1 error]))]))
 
 (defn- form
   [{:keys [config errors on-save]}]
@@ -135,8 +135,8 @@
          [:ul
           (for [[k messages] errors
                 msg messages]
-           [:li.text-sm.text-red-700.mt-1
-            (str "- " (name k) ": " msg)])]]]])
+            [:li.text-sm.text-red-700.mt-1
+             (str "- " (name k) ": " msg)])]]]])
 
     [:div.pt-4.flex.gap-3.border-t.border-slate-200
      [:a.btn.btn-secondary
@@ -156,6 +156,15 @@
         :errors (::configurations.db/validation-errors state)
         :on-save [[::configurations.db/save current-config]]})]))
 
+(defn- not-found []
+  [:div.empty-state
+   [:div.text-4xl.mb-4 "❌"]
+   [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
+   [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
+   [:a.btn-ghost.inline-block
+    {:href (rfe/href :configurations.routes/index)}
+    "← Back to Configurations"]])
+
 (defn edit-page [state]
   (let [current-config (::configurations.db/current-configuration state)
         validation-errors (::configurations.db/validation-errors state)]
@@ -166,17 +175,12 @@
          {:config current-config
           :errors validation-errors
           :on-save [[::configurations.db/save current-config]]})]
-      [:div.empty-state
-       [:div.text-4xl.mb-4 "❌"]
-       [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
-       [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
-        [:a.btn-ghost.inline-block
-         {:href (rfe/href :configurations.routes/index)}
-         "← Back to Configurations"]])))
+      (not-found))))
 
 (defn show-page [state]
   (let [current-config (::configurations.db/current-configuration state)
-        device-connected? (device.db/connected? state)]
+        device-connected? (device.db/connected? state)
+        send-success? (::configurations.db/send-success state)]
     (if current-config
       [:div
        [:div.flex.items-center.justify-between.mb-6
@@ -191,6 +195,17 @@
            [:button.btn.btn-primary
             {:on {:click [[::configurations.db/send-to-device current-config]]}}
             "Send to Device"])]]
+
+       (when send-success?
+         [:div.alert-success.mb-4
+          [:div.flex.items-center.justify-between
+           [:div.flex.items-center.gap-2
+            [:span "✓"]
+            [:p.text-sm.font-medium.text-green-900
+             "Configuration sent to device successfully!"]]
+           [:button.text-green-700.hover:text-green-900
+            {:on {:click [[::configurations.db/clear-send-success]]}}
+            "✕"]]])
 
        [:div.card
         [:h2.text-xl.font-semibold.text-slate-900.mb-4 "Configuration Details"]
@@ -207,11 +222,5 @@
           [:span.text-sm.font-medium.text-slate-600 "Volume"]
           [:span.text-sm.text-slate-900.font-semibold
            (:configuration/volume current-config) " %"]]]]]
-      [:div.empty-state
-       [:div.text-4xl.mb-4 "❌"]
-       [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
-       [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
-       [:a.btn-ghost.inline-block
-        {:href (rfe/href :configurations.routes/index)}
-        "← Back to Configurations"]])))
 
+      (not-found))))

@@ -51,4 +51,9 @@
   [{:keys [db]} [_ config]]
   (when (device.db/connected? db)
     (let [serialized (serialize-configuration config)]
-      [[::device.db/send-data serialized]])))
+      [[::device.db/send-data serialized]
+       [:db/assoc-in [::send-success] true]])))
+
+(defmethod db/action->effects ::clear-send-success
+  [_ _]
+  [[:db/dissoc-in [::send-success]]])
