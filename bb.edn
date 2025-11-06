@@ -9,9 +9,14 @@
   cljs-repl (clojure "-M:cljs:dev:shadow-cljs" "cljs-repl" "app")
 
   ;; Combined tasks
-  dev {:doc "Start dev server (NOTE: Run 'bb css:watch' in a separate terminal for CSS hot-reload)"
-       :depends [css:build]
-       :task (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")}
+  dev {:doc "Start dev server with CSS hot-reload"
+       :requires ([babashka.process :as proc])
+       :task (let [css-proc (proc/process ["npx" "tailwindcss" "-i" "./resources/css/main.css" "-o" "./public/css/main.css" "--watch"]
+                                          {:inherit true})]
+               (try
+                 (clojure "-M:cljs:dev:shadow-cljs" "watch" "app")
+                 (finally
+                   (proc/destroy css-proc))))}
 
   build {:doc "Build production bundle"
          :task (do

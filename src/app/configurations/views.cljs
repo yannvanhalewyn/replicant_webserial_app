@@ -78,7 +78,7 @@
          [:p.text-sm.text-red-600.mt-1 error]))]
 
     [:div
-     [:label.block.text-sm.font-medium.text-slate-900.mb-2
+     [:label.label
       [:span "Min Frequency: "]
       [:span.text-primary-600.font-semibold
        (:configuration/min-frequency config) " Hz"]]
