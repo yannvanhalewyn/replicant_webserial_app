@@ -16,9 +16,10 @@
   (fn [_coeffects action-vec]
     (first action-vec)))
 
-(defmethod action->effects :event/prevent-default
-  [_ _]
-  [[:effect/prevent-default]])
+;; This allows us to declare effects as actions
+(defmethod action->effects :default
+  [_ action-vec]
+  [action-vec])
 
 (defmethod action->effects :route/on-navigate
   [{:keys [db]} [_ new-match]]
@@ -36,7 +37,7 @@
   (fn [_event-data effect-vec]
     (first effect-vec)))
 
-(defmethod execute-effect! :effect/prevent-default
+(defmethod execute-effect! :event/prevent-default
   [event-data _]
   (.preventDefault (:replicant/js-event event-data)))
 
