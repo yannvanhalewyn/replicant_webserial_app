@@ -53,6 +53,15 @@
    :configuration/max-frequency 20000
    :configuration/volume 100})
 
+(defn serialize
+  "Serializes a configuration to a string format for sending to device."
+  [config]
+  (str "CONFIG:"
+       "MIN_FREQ=" (:configuration/min-frequency config) ","
+       "MAX_FREQ=" (:configuration/max-frequency config) ","
+       "VOLUME=" (:configuration/volume config)
+       "\n"))
+
 (defn valid?
   "Returns true if the configuration is valid."
   [config]

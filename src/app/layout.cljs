@@ -83,10 +83,10 @@
     [:div.flex.items-center.gap-3
      [:div.flex.items-center.gap-2
       [:div {:class (concat '[w-2.5 h-2.5 rounded-full]
-                         (cond
-                           connected? '[bg-green-500 animate-pulse]
-                           error '[bg-red-500]
-                           :else '[bg-slate-300]))}]
+                      (cond
+                        connected? '[bg-green-500 animate-pulse]
+                        error '[bg-red-500]
+                        :else '[bg-slate-300]))}]
       [:span.text-sm.font-medium.text-slate-700
        (cond
          connected? "Connected"

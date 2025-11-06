@@ -34,5 +34,6 @@
     (p/catch #(db/dispatch! {} [[:db/assoc-in [::error] %]]))))
 
 (defmethod db/execute-effect! ::send-data
-  [_event-data effect-vec]
-  (serial/send-data! (::connection @db/app-db) (second effect-vec)))
+  [_event-data [_ data {:keys [on-success]}]]
+  (-> (serial/send-data! (::connection @db/app-db) data)
+    (p/then #(db/dispatch! {} on-success))))
