@@ -1,11 +1,16 @@
 (ns app.db
   (:require
     [app.tools.storage :as storage]
+    [app.tools.utils :as u]
+    [clojure.walk :as walk]
     [reitit.frontend.easy :as rfe]))
 
 (defonce app-db
   (atom {:serial-status "Not Connected"
          ::configurations (storage/load! "fixme")}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Actions
 
 (defmulti action->effects
   (fn [_coeffects action-vec]
@@ -15,22 +20,58 @@
   [_ _]
   [[:effect/prevent-default]])
 
-(defmulti execute-effect
+(defmethod action->effects :route/on-navigate
+  [{:keys [db]} [_ new-match]]
+  [[:db/save
+    (let [on-mount (get-in new-match [:data :on-mount])
+          new-db (assoc db ::current-route new-match)]
+      (if on-mount
+        (on-mount new-match new-db)
+        new-db))]])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Effects
+
+(defmulti execute-effect!
   (fn [_event-data effect-vec]
     (first effect-vec)))
 
-(defmethod execute-effect :effect/prevent-default
+(defmethod execute-effect! :effect/prevent-default
   [event-data _]
   (.preventDefault (:replicant/js-event event-data)))
 
-(defmethod execute-effect :db/save
+(defmethod execute-effect! :db/save
   [_ [_ new-db]]
   (reset! app-db new-db))
 
-(defmethod execute-effect :storage/save
+(defmethod execute-effect! :storage/save
   [_ [_ storage-key data]]
   (storage/store! storage-key data))
 
-(defmethod execute-effect :route/push
+(defmethod execute-effect! :route/push
   [_ [_ route-name params query-params]]
   (rfe/push-state route-name params query-params))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Dispatch
+
+(defn- interpolate
+  "Replaces the placeholders in the actions with the relevant values"
+  [event-data actions]
+  (walk/postwalk
+    (fn [x]
+      (case x
+        :event/target.value (.. (:replicant/dom-event event-data) -target -value)
+        :event/target.value.int (u/parse-int (.. (:replicant/dom-event event-data) -target -value))
+        x))
+    actions))
+
+(defn dispatch!
+  "Interpolates the actions, extrapolates and then runs effects"
+  [event-data actions]
+  (let [db @app-db
+        effects (->> (interpolate event-data actions)
+                  (mapcat #(action->effects {:db db} %)))]
+    (doseq [effect effects]
+      (when effect ;; Allow for ignorable nil effects
+        (execute-effect! event-data effect)))))
