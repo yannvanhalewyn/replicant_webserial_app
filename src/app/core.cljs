@@ -9,6 +9,7 @@
     [app.webserial :as serial]
     [clojure.walk :as walk]
     [promesa.core :as p]
+    [reitit.coercion.malli :as rcm]
     [reitit.frontend :as rf]
     [reitit.frontend.easy :as rfe]
     [replicant.dom :as r]
@@ -16,7 +17,7 @@
 
 (defonce state
   (atom {:serial-status "Not Connected"
-         ::current-route nil
+         ::db/current-route nil
          ::db/configurations (storage/load-configurations)
          ::db/editing-configuration nil
          ::db/validation-errors nil}))
@@ -33,7 +34,8 @@
      :render configurations/new-page}]
    ["/configurations/:id/edit"
     {:name :route/configurations-edit
-     :render configurations/page}]])
+     :render configurations/edit-page
+     :parameters {:path [:map [:id :uuid]]}}]])
 
 (defmulti execute-action
   (fn [_event-data event-vec]
@@ -95,7 +97,8 @@
   (swap! state
     (fn [s]
       (let [base-config (or (::db/editing-configuration s)
-                          (configuration/new-configuration (::db/configurations s)))
+                            (get-in s [::db/configurations (db/path-params s :id)])
+                            (configuration/new-configuration (::db/configurations s)))
             new-config (assoc base-config field value)]
         (assoc s
           ::db/editing-configuration new-config
@@ -147,20 +150,20 @@
   (r/render (js/document.getElementById "app")
     [:div
      (nav/component)
-     (if-let [render (-> @state ::current-route :data :render)]
+     (if-let [render (-> @state ::db/current-route :data :render)]
        (render state)
        [:div [:h1 "Not Found"]
         [:a {:href (rfe/href :route/home)}
          "Back to home"]])]))
 
 (defn- on-navigate [new-match]
-  (swap! state assoc ::current-route new-match))
+  (swap! state assoc ::db/current-route new-match))
 
 (defn init! []
   (add-watch state ::render
     (fn [_ _ _ _] (render!)))
   (rfe/start!
-    (rf/router routes)
+    (rf/router routes {:data {:coercion rcm/coercion}})
     on-navigate
     {:use-fragment false})
   (render!))

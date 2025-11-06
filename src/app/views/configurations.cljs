@@ -23,13 +23,13 @@
       [:strong "Volume: "]
       (:configuration/volume config) "%"]]
     [:div {:style {:display "flex" :gap "0.5rem"}}
-     [:a {:href (rfe/href :route/configurations-edit {:id (str (:configuration/id config))})}
+     [:a {:href (rfe/href :route/configurations-edit
+                  {:id (:configuration/id config)})}
       "Edit"]
      [:button {:on {:click [[:configuration/delete (:configuration/id config)]]}}
       "Delete"]]]])
 
 (defn- configuration-form [{:keys [config validation-errors on-save]}]
-  (js/console.log :config config)
   [:form
    {:on {:submit (cond-> [[:event/prevent-default]]
                   (empty? validation-errors)
@@ -96,6 +96,34 @@
                            (configuration/new-configuration configurations))
         validation-errors (::db/validation-errors state)]
 
+    [:div
+     [:h1 "New Configuration"]
+
+     (configuration-form
+       {:config configuration
+        :validation-errors validation-errors
+        :on-save [[:configuration/save configuration]]})
+
+     [:hr {:style {:margin "2rem 0"}}]
+
+     [:h2 "Existing Configurations"]
+     [:div
+      (if (empty? configurations)
+        [:p "No configurations yet."]
+        (for [config (sort-by :configuration/name (vals configurations))]
+          ^{:key (:configuration/id config)}
+          (configuration-item config)))]]))
+
+(defn edit-page [state-atom]
+  (let [state @state-atom
+        id (db/path-params state :id)
+        _ (js/console.log :id id)
+        configurations (::db/configurations state)
+        configuration (or (::db/editing-configuration state)
+                           (get configurations id))
+        validation-errors (::db/validation-errors state)]
+
+    (js/console.log :editing configuration)
     [:div
      [:h1 "New Configuration"]
 
