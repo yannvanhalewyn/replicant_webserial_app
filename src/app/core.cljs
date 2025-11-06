@@ -31,11 +31,24 @@
      :render configurations/page}]
    ["/configurations/new"
     {:name :route/configurations-new
-     :render configurations/new-page}]
+     :render configurations/new-page
+     :on-mount
+     (fn [match state]
+       (assoc state
+         ::db/editing-configuration
+         (configuration/new-configuration (::db/configurations state))
+         ::db/validation-errors nil))}]
    ["/configurations/:id/edit"
     {:name :route/configurations-edit
      :render configurations/edit-page
-     :parameters {:path [:map [:id :uuid]]}}]])
+     :parameters {:path [:map [:id :uuid]]}
+     :on-mount
+     (fn [match state]
+       (let [id (get-in match [:parameters :path :id])]
+         (assoc state
+           ::db/editing-configuration
+           (get-in state [::db/configurations id])
+           ::db/validation-errors nil)))}]])
 
 (defmulti execute-action
   (fn [_event-data event-vec]
@@ -96,10 +109,7 @@
   [_event-data [_ field value]]
   (swap! state
     (fn [s]
-      (let [base-config (or (::db/editing-configuration s)
-                            (get-in s [::db/configurations (db/path-params s :id)])
-                            (configuration/new-configuration (::db/configurations s)))
-            new-config (assoc base-config field value)]
+      (let [new-config (assoc (::db/editing-configuration s) field value)]
         (assoc s
           ::db/editing-configuration new-config
           ::db/validation-errors (configuration/validate new-config))))))
@@ -157,7 +167,16 @@
          "Back to home"]])]))
 
 (defn- on-navigate [new-match]
-  (swap! state assoc ::db/current-route new-match))
+  (swap! state
+    (fn [s]
+      (let [on-mount (get-in new-match [:data :on-mount])
+            s' (assoc s ::db/current-route new-match)]
+        (if on-mount
+          (on-mount new-match s')
+          ;; Clear editing state for routes without on-mount
+          (assoc s'
+            ::db/editing-configuration nil
+            ::db/validation-errors nil))))))
 
 (defn init! []
   (add-watch state ::render

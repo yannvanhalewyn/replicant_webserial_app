@@ -32,8 +32,8 @@
 (defn- configuration-form [{:keys [config validation-errors on-save]}]
   [:form
    {:on {:submit (cond-> [[:event/prevent-default]]
-                  (empty? validation-errors)
-                  (concat on-save))}}
+                   (empty? validation-errors)
+                   (concat on-save))}}
    [:h2 "Configuration"]
 
    [:div {:style {:margin-bottom "1rem"}}
@@ -42,7 +42,7 @@
     [:input {:type "text"
              :value (:configuration/name config)
              :style {:width "100%" :padding "0.5rem"}
-             :on {:change [[:configuration-form/update-field :configuration/name :event/target.value]]}}]]
+             :on {:input [[:configuration-form/update-field :configuration/name :event/target.value]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -77,6 +77,7 @@
              :style {:width "100%"}
              :on {:input [[:configuration-form/update-field :configuration/volume :event/target.value.int]]}}]]
 
+   ;; TODO display errors on each field
    (when validation-errors
      [:div {:style {:color "red" :margin-bottom "1rem"}}
       [:strong "Validation Error:"]
@@ -92,55 +93,57 @@
 (defn new-page [state-atom]
   (let [state @state-atom
         configurations (::db/configurations state)
-        configuration (or (::db/editing-configuration state)
-                           (configuration/new-configuration configurations))
+        editing-config (::db/editing-configuration state)
         validation-errors (::db/validation-errors state)]
 
-    [:div
-     [:h1 "New Configuration"]
+    (when-not editing-config
+      [:div "Loading..."])
 
-     (configuration-form
-       {:config configuration
-        :validation-errors validation-errors
-        :on-save [[:configuration/save configuration]]})
+    (when editing-config
+      [:div
+       [:h1 "New Configuration"]
 
-     [:hr {:style {:margin "2rem 0"}}]
+       (configuration-form
+         {:config editing-config
+          :validation-errors validation-errors
+          :on-save [[:configuration/save editing-config]]})
 
-     [:h2 "Existing Configurations"]
-     [:div
-      (if (empty? configurations)
-        [:p "No configurations yet."]
-        (for [config (sort-by :configuration/name (vals configurations))]
-          ^{:key (:configuration/id config)}
-          (configuration-item config)))]]))
+       [:hr {:style {:margin "2rem 0"}}]
+
+       [:h2 "Existing Configurations"]
+       [:div
+        (if (empty? configurations)
+          [:p "No configurations yet."]
+          (for [config (sort-by :configuration/name (vals configurations))]
+            ^{:key (:configuration/id config)}
+            (configuration-item config)))]])))
 
 (defn edit-page [state-atom]
   (let [state @state-atom
-        id (db/path-params state :id)
-        _ (js/console.log :id id)
         configurations (::db/configurations state)
-        configuration (or (::db/editing-configuration state)
-                           (get configurations id))
+        editing-config (::db/editing-configuration state)
         validation-errors (::db/validation-errors state)]
 
-    (js/console.log :editing configuration)
-    [:div
-     [:h1 "New Configuration"]
+    (when-not editing-config
+      [:div "Configuration not found"])
 
-     (configuration-form
-       {:config configuration
-        :validation-errors validation-errors
-        :on-save [[:configuration/save configuration]]})
+    (when editing-config
+      [:div
+       [:h1 "Edit Configuration"]
 
-     [:hr {:style {:margin "2rem 0"}}]
+       (configuration-form
+         {:config editing-config
+          :validation-errors validation-errors
+          :on-save [[:configuration/save editing-config]]})
 
-     [:h2 "Existing Configurations"]
-     [:div
-      (if (empty? configurations)
-        [:p "No configurations yet."]
-        (for [config (sort-by :configuration/name (vals configurations))]
+       [:hr {:style {:margin "2rem 0"}}]
+
+       [:h2 "Other Configurations"]
+       [:div
+        (for [config (sort-by :configuration/name (vals configurations))
+              :when (not= (:configuration/id config) (:configuration/id editing-config))]
           ^{:key (:configuration/id config)}
-          (configuration-item config)))]]))
+          (configuration-item config))]])))
 
 (defn page [state-atom]
   (let [state @state-atom
