@@ -84,7 +84,6 @@
 
 (register-placeholder! :event/target.value
   (fn [event-data]
-    (js/console.log "running value placeholder")
     (.. (:replicant/dom-event event-data) -target -value)))
 
 (register-placeholder! :event/target.value.int
@@ -105,7 +104,6 @@
 (defn dispatch!
   "Interpolates the actions, extrapolates and then runs effects"
   [event-data actions]
-  ;;(js/console.log :dispatch! event-data actions)
   (let [db @app-db
         effects (->> (interpolate event-data actions)
                   (mapcat #(action->effects {:db db} %)))]
