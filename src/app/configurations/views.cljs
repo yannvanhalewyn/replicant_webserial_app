@@ -1,8 +1,10 @@
 (ns app.configurations.views
   (:require
-    [app.configurations.db :as configurations.db]
-    [app.db :as db]
-    [reitit.frontend.easy :as rfe]))
+   [app.configurations.configuration :as configuration]
+   [app.configurations.db :as configurations.db]
+   [malli.core :as m]
+   [malli.util :as mu]
+   [reitit.frontend.easy :as rfe]))
 
 (defn- configuration-item [config]
   [:div.card-hover
@@ -60,26 +62,28 @@
 (defn- format-number [n]
   (.format (js/Intl.NumberFormat "en-US") n))
 
-(defn- range-slider [{:keys [form-data errors key label unit min max]}]
-  [:div
-   [:label.label
-    [:span label]
-    [:span.text-primary-600.font-semibold
-     (format-number (get form-data key)) " " unit]]
-   [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
-    {:type "range"
-     :min min
-     :max max
-     :step 1
-     :value (get form-data key)
-     :class "range-slider"
-     :on {:input [[::configurations.db/update-form-field key [:event/target.value.int]]]}}]
-   [:div.flex.justify-between.text-xs.text-slate-500.mt-1
-    [:span (str (format-number min) " " unit)]
-    [:span (str (format-number max) " " unit)]]
-   (when-let [field-errors (get errors key)]
-     (for [error field-errors]
-       [:p.text-sm.text-red-600.mt-1 error]))])
+(defn- range-slider [{:keys [form-data errors key]}]
+  (let [schema-props (m/properties (mu/get configuration/BaseSchema key))
+        unit (:form/unit schema-props)]
+   [:div
+    [:label.label
+     [:span (:form/label schema-props) " "]
+     [:span.text-primary-600.font-semibold
+      (format-number (get form-data key)) " " unit]]
+    [:input.w-full.h-2.bg-slate-200.rounded-lg.appearance-none.cursor-pointer
+     {:type "range"
+      :min (:min schema-props)
+      :max (:max schema-props)
+      :step 1
+      :value (get form-data key)
+      :class "range-slider"
+      :on {:input [[::configurations.db/update-form-field key [:event/target.value.int]]]}}]
+    [:div.flex.justify-between.text-xs.text-slate-500.mt-1
+     [:span (str (format-number (:min schema-props)) " " unit)]
+     [:span (str (format-number (:max schema-props)) " " unit)]]
+    (when-let [field-errors (get errors key)]
+      (for [error field-errors]
+        [:p.text-sm.text-red-600.mt-1 error]))]))
 
 (defn- form
   [{:keys [config errors on-save]}]
@@ -104,29 +108,17 @@
     (range-slider
       {:form-data config
        :key :configuration/min-frequency
-       :errors errors
-       :label "Min Frequency: "
-       :unit "Hz"
-       :min 0
-       :max 20000})
+       :errors errors})
 
     (range-slider
       {:form-data config
        :key :configuration/max-frequency
-       :errors errors
-       :label "Max Frequency: "
-       :unit "Hz"
-       :min 0
-       :max 20000})
+       :errors errors})
 
     (range-slider
       {:form-data config
        :key :configuration/volume
-       :errors errors
-       :label "Volume: "
-       :unit "%"
-       :min 0
-       :max 100})
+       :errors errors})
 
     (when errors
       [:div.alert-error

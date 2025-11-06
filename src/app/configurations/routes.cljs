@@ -2,8 +2,7 @@
   (:require
     [app.configurations.configuration :as configuration]
     [app.configurations.db :as configurations.db]
-    [app.configurations.views :as configurations.views]
-    [app.db :as db]))
+    [app.configurations.views :as configurations.views]))
 
 (def routes
   [["/configurations"

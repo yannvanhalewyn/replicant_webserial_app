@@ -5,15 +5,27 @@
     [malli.core :as m]
     [malli.error :as me]))
 
+(def BaseSchema
+  [:map
+   [:configuration/id :uuid]
+   [:configuration/name [:string {:min 1}]]
+   [:configuration/min-frequency [:int {:min 0
+                                        :max 20000
+                                        :form/unit "Hz"
+                                        :form/label "Min Frequency"}]]
+   [:configuration/max-frequency [:int {:min 0
+                                        :max 20000
+                                        :form/unit "Hz"
+                                        :form/label "Max Frequency"}]]
+   [:configuration/volume [:int {:min 0
+                                 :max 100
+                                 :form/unit "%"
+                                 :form/label "Volume"}]]])
+
 (def Configuration
   (m/schema
     [:and
-     [:map
-      [:configuration/id :uuid]
-      [:configuration/name [:string {:min 1}]]
-      [:configuration/min-frequency [:int {:min 0 :max 20000}]]
-      [:configuration/max-frequency [:int {:min 0 :max 20000}]]
-      [:configuration/volume [:int {:min 0 :max 100}]]]
+     BaseSchema
      [:fn
       {:error/message "Max frequency must be greater than or equal to min frequency"
        :error/path [:configuration/max-frequency]}
