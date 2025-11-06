@@ -66,7 +66,7 @@
     [:input {:type "text"
              :value (:configuration/name config)
              :style {:width "100%" :padding "0.5rem"}
-             :on {:input [[::configurations.db/update-form-field :configuration/name :event/target.value]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/name [:event/target.value]]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -77,7 +77,7 @@
              :step 1
              :value (:configuration/min-frequency config)
              :style {:width "100%"}
-             :on {:input [[::configurations.db/update-form-field :configuration/min-frequency :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/min-frequency [:event/target.value.int]]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -88,7 +88,7 @@
              :step 1
              :value (:configuration/max-frequency config)
              :style {:width "100%"}
-             :on {:input [[::configurations.db/update-form-field :configuration/max-frequency :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/max-frequency [:event/target.value.int]]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -99,7 +99,7 @@
              :step 1
              :value (:configuration/volume config)
              :style {:width "100%"}
-             :on {:input [[::configurations.db/update-form-field :configuration/volume :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/volume [:event/target.value.int]]]}}]]
 
    ;; TODO display errors on each field
    (when validation-errors

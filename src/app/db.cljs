@@ -6,8 +6,7 @@
     [reitit.frontend.easy :as rfe]))
 
 (defonce app-db
-  (atom {:serial-status "Not Connected"
-         ::configurations (storage/load! "fixme")}))
+  (atom {}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actions
@@ -16,7 +15,7 @@
   (fn [_coeffects action-vec]
     (first action-vec)))
 
-;; This allows us to declare effects as actions
+;; This passthrough allows us to call effects directly from actions
 (defmethod action->effects :default
   [_ action-vec]
   [action-vec])
@@ -45,6 +44,23 @@
   [_ [_ new-db]]
   (reset! app-db new-db))
 
+(defmethod execute-effect! :db/assoc-in
+  [_ [_ path v]]
+  (swap! app-db assoc-in path v))
+
+(defmethod execute-effect! :db/dissoc-in
+  [_ [_ path]]
+  (swap! app-db u/dissoc-in path))
+
+(defmethod execute-effect! :db/assoc-in-batch
+  [_ [_ path-vs]]
+  (swap! app-db
+    (fn [db]
+      (reduce
+        (fn [acc [path v]]
+          (assoc-in acc path v))
+        db path-vs))))
+
 (defmethod execute-effect! :route/push
   [_ [_ route-name params query-params]]
   (rfe/push-state route-name params query-params))
@@ -60,23 +76,40 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dispatch
 
+(defonce placeholders (atom {}))
+
+(defn register-placeholder!
+  [k f]
+  (swap! placeholders assoc k f))
+
+(register-placeholder! :event/target.value
+  (fn [event-data]
+    (js/console.log "running value placeholder")
+    (.. (:replicant/dom-event event-data) -target -value)))
+
+(register-placeholder! :event/target.value.int
+  (fn [event-data]
+    (u/parse-int (.. (:replicant/dom-event event-data) -target -value))))
+
 (defn- interpolate
   "Replaces the placeholders in the actions with the relevant values"
   [event-data actions]
-  (walk/postwalk
-    (fn [x]
-      (case x
-        :event/target.value (.. (:replicant/dom-event event-data) -target -value)
-        :event/target.value.int (u/parse-int (.. (:replicant/dom-event event-data) -target -value))
-        x))
-    actions))
+  (let [placeholders @placeholders]
+    (walk/postwalk
+      (fn [x]
+        (if-let [f (and (vector? x) (get placeholders (first x)))]
+          (apply f event-data (rest x))
+          x))
+      actions)))
 
 (defn dispatch!
   "Interpolates the actions, extrapolates and then runs effects"
   [event-data actions]
+  (js/console.log :dispatch! event-data actions)
   (let [db @app-db
         effects (->> (interpolate event-data actions)
                   (mapcat #(action->effects {:db db} %)))]
+    (js/console.log :effects effects)
     (doseq [effect effects]
       (when effect ;; Allow for ignorable nil effects
         (execute-effect! event-data effect)))))

@@ -7,31 +7,31 @@
 (defn connected? [state]
   (contains? state ::connection))
 
-(defmethod db/action->effects :webserial/connect
-  [_event-data _event]
+(db/register-placeholder! ::new-connection ::connection)
+
+(defmethod db/action->effects ::connect
+  [_ _]
+  [[::connect
+    {:on-success [[:db/assoc-in [::connection] [::new-connection]]]}]])
+
+(defmethod db/execute-effect! ::connect
+  [_event-data [_ {:keys [on-success]}]]
   (-> (serial/connect!)
-    (p/then #(do
-               (js/console.log "Connected:" %)
-               (swap! db/app-db assoc
-                 :serial-status "Connected"
-                 ::db/connection %)))
-    (p/catch
-      (fn [err]
-        (println "Error connecting:" err)
-        {:serial-status (str "Error: " (.-message err))}))))
+    (p/then #(db/dispatch! {::connection %} on-success))
+    (p/catch #(db/dispatch! {} [[:db/assoc-in [::error] %]]))))
 
-(defmethod db/action->effects :webserial/disconnect
-  [_event-data _event]
-  (-> (serial/disconnect! (::db/connection @db/app-db))
-    (p/then (fn []
-              (swap! db/app-db
-                #(-> %
-                   (dissoc ::db/connection)
-                   (assoc :serial-status "Not Connected")))))
-    (p/catch #(println "Error disconecting:" %))))
+(defmethod db/action->effects ::disconnect
+  [{:keys [db]} _event]
+  (js/console.log :action "connection:" (::connection db))
+  [[::disconnect (::connection db)
+    {:on-success [[:db/dissoc-in [::connection]]]}]])
 
-(defmethod db/action->effects :webserial/send-data
-  [_event-data event]
-  (serial/send-data! (::db/connection @db/app-db) (second event)))
+(defmethod db/execute-effect! ::disconnect
+  [_ [_ connection {:keys [on-success]}]]
+  (-> (serial/disconnect! connection)
+    (p/then #(db/dispatch! {::connection %} on-success))
+    (p/catch #(db/dispatch! {} [[:db/assoc-in [::error] %]]))))
 
-
+(defmethod db/execute-effect! ::send-data
+  [_event-data effect-vec]
+  (serial/send-data! (::connection @db/app-db) (second effect-vec)))
