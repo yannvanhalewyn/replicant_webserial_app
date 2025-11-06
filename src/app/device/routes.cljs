@@ -6,7 +6,7 @@
   [["/devices"
     {:name :devices.routes/index
      :breadcrumbs [{:label "Home" :href "/"}
-                   {:label "Devices" :href "/devices"}]
+                   {:label "Devices" :route [:devices.routes/index]}]
      :render
      (fn [state]
        [:div

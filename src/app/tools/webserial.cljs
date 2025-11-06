@@ -23,7 +23,7 @@
       (read-loop))))
 
 (defn connect! []
-  (when (webserial-supported?)
+  (if (webserial-supported?)
     (-> (js/navigator.serial.requestPort)
       (p/then
         (fn [selected-port]
@@ -37,7 +37,8 @@
             {::port port
              ::reader reader
              ::writer writer
-             ::encoder (js/TextEncoder.)}))))))
+             ::encoder (js/TextEncoder.)}))))
+    (p/rejected (js/Error. "WebSerial API is not supported in this browser. Please use Chrome, Edge, or Opera."))))
 
 (defn disconnect! [connection]
   (when connection
