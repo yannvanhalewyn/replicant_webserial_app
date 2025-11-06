@@ -36,7 +36,7 @@
   (r/render (js/document.getElementById "app")
     (layout/component {}
       (if-let [render (-> @db/app-db ::db/current-route :data :render)]
-        (render db/app-db)
+        (render @db/app-db)
         [:div [:h1 "Not Found"]
          [:a {:href "/"}
           "Back to home"]]))))

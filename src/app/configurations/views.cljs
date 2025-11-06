@@ -30,9 +30,8 @@
      [:button {:on {:click [[::configurations.db/delete (:configuration/id config)]]}}
       "Delete"]]]])
 
-(defn list-page [state-atom]
-  (let [state @state-atom
-        configurations (::db/configurations state)]
+(defn list-page [state]
+  (let [configurations (::db/configurations state)]
     [:div
      [:h1 "Configurations"]
      [:p "Manage your device configurations here."]
@@ -115,18 +114,17 @@
                {:disabled true})
      "Save"]]])
 
-(defn new-page [state-atom]
-  (let [current-config (::db/editing-configuration @state-atom)]
+(defn new-page [state]
+  (let [current-config (::db/editing-configuration state)]
     [:div
      [:h1 "New Configuration"]
      (form
        {:config current-config
-        :validation-errors (::db/validation-errors @state-atom)
+        :validation-errors (::db/validation-errors state)
         :on-save [[::configurations.db/save current-config]]})]))
 
-(defn edit-page [state-atom]
-  (let [state @state-atom
-        editing-config (::db/editing-configuration state)
+(defn edit-page [state]
+  (let [editing-config (::db/editing-configuration state)
         validation-errors (::db/validation-errors state)]
     (if editing-config
       [:div
