@@ -9,11 +9,11 @@
 
 (defn- configuration-item [config]
   [:div.card-hover
-   [:a
-    {:href (rfe/href :configurations.routes/show
-             {:id (:configuration/id config)})}
+   [:div
     [:div.flex.items-start.justify-between
-     [:div.flex-1
+     [:a.flex-1
+      {:href (rfe/href :configurations.routes/show
+               {:id (:configuration/id config)})}
       [:h3.text-lg.font-semibold.text-slate-900.mb-3
        (:configuration/name config)]
       [:div.space-y-2
@@ -29,12 +29,10 @@
      [:div.flex.gap-2
       [:a.btn.btn-ghost
        {:href (rfe/href :configurations.routes/edit
-                {:id (:configuration/id config)})
-        :on {:click [[:event/stop-propagation]]}}
+                {:id (:configuration/id config)})}
        "Edit"]
       [:button.btn.btn-danger
-       {:on {:click [[::configurations.db/delete (:configuration/id config)]
-                     [:event/stop-propagation]]}}
+       {:on {:click [[::configurations.db/delete (:configuration/id config)]]}}
        "Delete"]]]]])
 
 (defn list-page [state]
@@ -161,7 +159,7 @@
    [:div.text-4xl.mb-4 "❌"]
    [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
    [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
-   [:a.btn-ghost.inline-block
+   [:a.btn.btn-ghost.inline-block
     {:href (rfe/href :configurations.routes/index)}
     "← Back to Configurations"]])
 
