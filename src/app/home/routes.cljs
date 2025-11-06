@@ -1,5 +1,6 @@
 (ns app.home.routes
   (:require
+    [app.configurations.db :as configurations.db]
     [app.device.db :as device.db]
     [app.device.views :as device.views]))
 
@@ -21,7 +22,7 @@
            [:span.text-2xl "⚙️"]
            [:h3.text-sm.font-medium.text-slate-600 "Configurations"]]
           [:p.text-3xl.font-bold.text-slate-900
-           (count (get state :app.db/configurations {}))]]
+           (count (get state ::configurations.db/configurations {}))]]
 
          [:div.stat-card
           [:div.mb-2.flex.items-center.gap-3

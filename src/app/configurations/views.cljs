@@ -30,7 +30,7 @@
       "Delete"]]]])
 
 (defn list-page [state]
-  (let [configurations (::db/configurations state)]
+  (let [configurations (::configurations.db/configurations state)]
     [:div
      [:div.flex.items-center.justify-between.mb-6
       [:div

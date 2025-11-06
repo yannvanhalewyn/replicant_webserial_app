@@ -8,7 +8,7 @@
 
 (defmethod db/action->effects ::init
   [_ _]
-  [[:storage/load STORAGE_KEY ::db/configurations]])
+  [[:storage/load STORAGE_KEY ::configurations]])
 
 (defmethod db/action->effects ::update-form-field
   [{:keys [db]} [_ field value]]
@@ -23,16 +23,16 @@
     (if errors
       [[:db/save (assoc db ::validation-errors errors)]]
       (let [new-db (-> db
-                     (assoc-in [::db/configurations (:configuration/id config)] config)
+                     (assoc-in [::configurations (:configuration/id config)] config)
                      (assoc
                        ::current-configuration nil
                        ::validation-errors nil))]
         [[:db/save new-db]
-         [:storage/save STORAGE_KEY (::db/configurations new-db)]
+         [:storage/save STORAGE_KEY (::configurations new-db)]
          [:route/push :configurations.routes/index]]))))
 
 (defmethod db/action->effects ::delete
   [{:keys [db]} [_ config-id]]
-  (let [new-db (u/dissoc-in db [::db/configurations config-id])]
+  (let [new-db (u/dissoc-in db [::configurations config-id])]
     [[:db/save new-db]
-     [:storage/save STORAGE_KEY (::db/configurations new-db)]]))
+     [:storage/save STORAGE_KEY (::configurations new-db)]]))

@@ -22,7 +22,7 @@
      (fn [_match state]
        (assoc state
          ::configurations.db/current-configuration
-         (configuration/new-configuration (::db/configurations state))
+         (configuration/new-configuration (::configurations.db/configurations state))
          ::configurations.db/validation-errors nil))}]
 
    ["/configurations/:id/edit"
@@ -37,5 +37,5 @@
        (let [id (get-in match [:parameters :path :id])]
          (assoc state
            ::configurations.db/current-configuration
-           (get-in state [::db/configurations id])
+           (get-in state [::configurations.db/configurations id])
            ::configurations.db/validation-errors nil)))}]])
