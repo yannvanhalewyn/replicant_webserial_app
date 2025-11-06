@@ -1,7 +1,8 @@
-(ns app.views.configurations
+(ns app.configurations.views
   (:require
+    [app.configurations.db :as configurations.db]
     [app.db :as db]
-    [app.configuration :as configuration]
+    [app.device.views :as device.views]
     [reitit.frontend.easy :as rfe]))
 
 (defn- configuration-item [config]
@@ -23,13 +24,37 @@
       [:strong "Volume: "]
       (:configuration/volume config) "%"]]
     [:div {:style {:display "flex" :gap "0.5rem"}}
-     [:a {:href (rfe/href :route/configurations-edit
+     [:a {:href (rfe/href :configurations.routes/edit
                   {:id (:configuration/id config)})}
       "Edit"]
-     [:button {:on {:click [[:configuration/delete (:configuration/id config)]]}}
+     [:button {:on {:click [[::configurations.db/delete (:configuration/id config)]]}}
       "Delete"]]]])
 
-(defn- configuration-form [{:keys [config validation-errors on-save]}]
+(defn list-page [state-atom]
+  (let [state @state-atom
+        configurations (::db/configurations state)]
+    [:div
+     [:h1 "Configurations"]
+     [:p "Manage your device configurations here."]
+
+     (device.views/device-status state)
+
+     [:div {:style {:margin "2rem 0"}}
+      [:a {:href (rfe/href :configurations.routes/new)}
+       "Add Configuration"]]
+
+     [:div
+      (if (empty? configurations)
+        [:p "No configurations yet. Click 'Add Configuration' to create one."]
+        (for [config (sort-by :configuration/name (vals configurations))]
+          ^{:key (:configuration/id config)}
+          (configuration-item config)))]]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Form
+
+(defn- form
+  [{:keys [config validation-errors on-save]}]
   [:form
    {:on {:submit (cond-> [[:event/prevent-default]]
                    (empty? validation-errors)
@@ -42,7 +67,7 @@
     [:input {:type "text"
              :value (:configuration/name config)
              :style {:width "100%" :padding "0.5rem"}
-             :on {:input [[:configuration-form/update-field :configuration/name :event/target.value]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/name :event/target.value]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -53,7 +78,7 @@
              :step 1
              :value (:configuration/min-frequency config)
              :style {:width "100%"}
-             :on {:input [[:configuration-form/update-field :configuration/min-frequency :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/min-frequency :event/target.value.int]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -64,7 +89,7 @@
              :step 1
              :value (:configuration/max-frequency config)
              :style {:width "100%"}
-             :on {:input [[:configuration-form/update-field :configuration/max-frequency :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/max-frequency :event/target.value.int]]}}]]
 
    [:div {:style {:margin-bottom "1rem"}}
     [:label {:style {:display "block" :margin-bottom "0.5rem"}}
@@ -75,7 +100,7 @@
              :step 1
              :value (:configuration/volume config)
              :style {:width "100%"}
-             :on {:input [[:configuration-form/update-field :configuration/volume :event/target.value.int]]}}]]
+             :on {:input [[::configurations.db/update-form-field :configuration/volume :event/target.value.int]]}}]]
 
    ;; TODO display errors on each field
    (when validation-errors
@@ -84,85 +109,30 @@
       [:div "Max frequency must be greater than or equal to min frequency"]])
 
    [:div {:style {:display "flex" :gap "0.5rem"}}
-    [:a {:href (rfe/href :route/configurations)}
+    [:a {:href (rfe/href :configurations.routes/index)}
      "Cancel"]
-    [:button (cond-> {}
-               )
+    [:button (when (seq validation-errors)
+               {:disabled true})
      "Save"]]])
 
 (defn new-page [state-atom]
-  (let [state @state-atom
-        configurations (::db/configurations state)
-        editing-config (::db/editing-configuration state)
-        validation-errors (::db/validation-errors state)]
-
-    (when-not editing-config
-      [:div "Loading..."])
-
-    (when editing-config
-      [:div
-       [:h1 "New Configuration"]
-
-       (configuration-form
-         {:config editing-config
-          :validation-errors validation-errors
-          :on-save [[:configuration/save editing-config]]})
-
-       [:hr {:style {:margin "2rem 0"}}]
-
-       [:h2 "Existing Configurations"]
-       [:div
-        (if (empty? configurations)
-          [:p "No configurations yet."]
-          (for [config (sort-by :configuration/name (vals configurations))]
-            ^{:key (:configuration/id config)}
-            (configuration-item config)))]])))
+  (let [current-config (::db/editing-configuration @state-atom)]
+    [:div
+     [:h1 "New Configuration"]
+     (form
+       {:config current-config
+        :validation-errors (::db/validation-errors @state-atom)
+        :on-save [[::configurations.db/save current-config]]})]))
 
 (defn edit-page [state-atom]
   (let [state @state-atom
-        configurations (::db/configurations state)
         editing-config (::db/editing-configuration state)
         validation-errors (::db/validation-errors state)]
-
-    (when-not editing-config
-      [:div "Configuration not found"])
-
-    (when editing-config
+    (if editing-config
       [:div
        [:h1 "Edit Configuration"]
-
-       (configuration-form
+       (form
          {:config editing-config
           :validation-errors validation-errors
-          :on-save [[:configuration/save editing-config]]})
-
-       [:hr {:style {:margin "2rem 0"}}]
-
-       [:h2 "Other Configurations"]
-       [:div
-        (for [config (sort-by :configuration/name (vals configurations))
-              :when (not= (:configuration/id config) (:configuration/id editing-config))]
-          ^{:key (:configuration/id config)}
-          (configuration-item config))]])))
-
-(defn page [state-atom]
-  (let [state @state-atom
-        configurations (::db/configurations state)]
-    [:div
-     [:h1 "Configurations"]
-     [:p "Manage your device configurations here."]
-
-     [:div.status
-      [:strong "Serial Status: "]
-      (:serial-status state)]
-
-     [:div {:style {:margin "2rem 0"}}
-      [:a {:href (rfe/href :route/configurations-new)}
-       "Add Configuration"]]
-
-     [:div
-      (if (empty? configurations)
-        [:p "No configurations yet. Click 'Add Configuration' to create one."]
-        (for [config (sort-by :configuration/name (vals configurations))]
-          ^{:key (:configuration/id config)}
-          (configuration-item config)))]]))
+          :on-save [[::configurations.db/save editing-config]]}) ]
+      [:div "Configuration not found"])))

@@ -1,10 +1,18 @@
-(ns app.db)
+(ns app.db
+  (:require
+    [app.tools.storage :as storage]))
 
-(defn connected? [state]
-  (contains? state ::connection))
+(defonce app-db
+  (atom {:serial-status "Not Connected"
+         ::current-route nil
+         ::configurations (storage/load-configurations)
+         ::editing-configuration nil
+         ::validation-errors nil}))
 
-(defn path-params
-  ([state]
-   (get-in state [::current-route :parameters :path]))
-  ([state k]
-   (get-in state [::current-route :parameters :path k])))
+(defmulti execute-action
+  (fn [_event-data event-vec]
+    (first event-vec)))
+
+(defmethod execute-action :event/prevent-default
+  [event-data _]
+  (.preventDefault (:replicant/js-event event-data)))

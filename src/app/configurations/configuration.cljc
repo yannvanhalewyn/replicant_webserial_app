@@ -1,4 +1,4 @@
-(ns app.configuration
+(ns app.configurations.configuration
   (:refer-clojure :exclude [new])
   (:require
     [app.tools.utils :as u]

@@ -1,12 +1,9 @@
-(ns app.views.home
+(ns app.device.views
   (:require
-    [app.db :as db]))
+    [app.device.db :as device.db]))
 
-(defn page [state]
-  [:div
-   [:h1 "Configuration Panel"]
-   [:p "Please connect to your device"]
-
+(defn device-status [state]
+  (list
    [:div.status
     [:strong "Serial Status: "]
     (:serial-status state)]
@@ -17,13 +14,11 @@
      "Connect to Serial Device"]
 
     [:button
-     {:disabled (not (db/connected? state))
+     {:disabled (not (device.db/connected? state))
       :on {:click [[:webserial/disconnect]]}}
      "Disconnect"]
 
     [:button
-     {:disabled (not (db/connected? state))
+     {:disabled (not (device.db/connected? state))
       :on {:click [[:webserial/send-data "Hello from browser!\n"]]}}
-     "Send Test Message"]]])
-
-
+     "Send Test Message"]]))

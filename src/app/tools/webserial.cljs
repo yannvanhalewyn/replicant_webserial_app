@@ -1,4 +1,4 @@
-(ns app.webserial
+(ns app.tools.webserial
   (:require [promesa.core :as p]))
 
 (defn- webserial-supported? []
