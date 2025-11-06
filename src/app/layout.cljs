@@ -94,10 +94,10 @@
          :else "Not Connected")]]
 
      (if connected?
-       [:button.btn-secondary.px-3.py-1.text-xs
+       [:button.btn.btn-secondary.px-3.py-1.text-xs
         {:on {:click [[::device.db/disconnect]]}}
         "Disconnect"]
-       [:button.btn-primary.px-3.py-1.text-xs
+       [:button.btn.btn-primary.px-3.py-1.text-xs
         {:on {:click [[::device.db/connect]]}}
         "Connect Device"])]))
 

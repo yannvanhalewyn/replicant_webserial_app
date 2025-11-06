@@ -21,11 +21,11 @@
        [:span.text-sm.text-slate-900
         (:configuration/volume config) "%"]]]]
     [:div.flex.gap-2
-     [:a.btn-ghost
+     [:a.btn.btn-ghost
       {:href (rfe/href :configurations.routes/edit
                {:id (:configuration/id config)})}
       "Edit"]
-     [:button.btn-danger
+     [:button.btn.btn-danger
       {:on {:click [[::configurations.db/delete (:configuration/id config)]]}}
       "Delete"]]]])
 
@@ -36,7 +36,7 @@
       [:div
        [:h1.text-3xl.font-bold.text-slate-900.mb-2 "Configurations"]
        [:p.text-slate-600 "Manage your device configurations"]]
-      [:a.btn-primary.flex.items-center.gap-2
+      [:a.btn.btn-primary.flex.items-center.gap-2
        {:href (rfe/href :configurations.routes/new)}
        [:span "＋"]
        [:span "New Configuration"]]]
@@ -47,7 +47,7 @@
          [:div.text-4xl.mb-4 "⚙️"]
          [:h3.text-lg.font-medium.text-slate-900.mb-2 "No configurations yet"]
          [:p.text-slate-600.mb-6 "Get started by creating your first configuration"]
-         [:a.btn-primary.inline-block
+         [:a.btn.btn-primary.inline-block
           {:href (rfe/href :configurations.routes/new)}
           "Create Configuration"]]
         (for [config (sort-by :configuration/name (vals configurations))]
@@ -140,11 +140,11 @@
            [:li.text-sm.text-red-700.mt-1
             (str "- " (name k) ": " msg)])]]]])
 
-    [:div.flex.gap-3.pt-4.border-t.border-slate-200
-     [:a.btn-secondary.px-6.py-2
+    [:div.pt-4.flex.gap-3.border-t.border-slate-200
+     [:a.btn.btn-secondary
       {:href (rfe/href :configurations.routes/index)}
       "Cancel"]
-     [:button.btn-primary.px-6.py-2.disabled:bg-slate-300.disabled:cursor-not-allowed
+     [:button.btn.btn-primary
       (cond-> {}
         (seq errors) (assoc :disabled true))
       "Save Configuration"]]]])

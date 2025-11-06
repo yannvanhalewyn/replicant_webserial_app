@@ -26,56 +26,62 @@
 }
 
 /* Reusable Component Classes */
-.card {
-  @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6;
-}
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6;
+  }
 
-.card-hover {
-  @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6 transition-shadow duration-150;
-}
+  .card-hover {
+    @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6 transition-shadow duration-150;
+  }
 
-.card-hover:hover {
-  @apply shadow-md;
-}
+  .card-hover:hover {
+    @apply shadow-md;
+  }
 
-.btn {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer;
-}
+  .btn {
+    @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer;
+  }
 
-.btn-primary {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer text-white bg-primary-600 border-none hover:bg-primary-700;
-}
+  .btn:is(:disabled, [disabled]) {
+    @apply bg-slate-300 pointer-events-none cursor-not-allowed;
+  }
 
-.btn-secondary {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer text-slate-700 bg-white border border-slate-300 hover:bg-slate-50;
-}
+  .btn-primary {
+    @apply text-white bg-primary-600 border-none hover:bg-primary-700;
+  }
 
-.btn-danger {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer text-red-700 bg-red-50 border border-red-200 hover:bg-red-100;
-}
+  .btn-secondary {
+    @apply text-slate-700 bg-white border border-slate-300 hover:bg-slate-50;
+  }
 
-.btn-ghost {
-  @apply px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer text-primary-700 bg-primary-50 border border-primary-200 hover:bg-primary-100;
-}
+  .btn-danger {
+    @apply text-red-700 bg-red-50 border border-red-200 hover:bg-red-100;
+  }
 
-.input {
-  @apply w-full px-4 py-2 border border-slate-300 rounded-md transition duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
-}
+  .btn-ghost {
+    @apply text-primary-700 bg-primary-50 border border-primary-200 hover:bg-primary-100;
+  }
 
-.label {
-  @apply block text-sm font-medium text-slate-900 mb-2;
-}
+  .input {
+    @apply w-full px-4 py-2 border border-slate-300 rounded-md transition duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  }
 
-.stat-card {
-  @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6;
-}
+  .label {
+    @apply block text-sm font-medium text-slate-900 mb-2;
+  }
 
-.empty-state {
-  @apply bg-white rounded-lg shadow-sm border border-slate-300 p-12 text-center;
-}
+  .stat-card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-300 p-6;
+  }
 
-.alert-error {
-  @apply bg-red-50 border border-red-200 rounded-md p-4;
+  .empty-state {
+    @apply bg-white rounded-lg shadow-sm border border-slate-300 p-12 text-center;
+  }
+
+  .alert-error {
+    @apply bg-red-50 border border-red-200 rounded-md p-4;
+  }
 }
 
 /* Custom range slider styling */

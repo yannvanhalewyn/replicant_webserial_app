@@ -27,16 +27,16 @@
 
        [:div.flex.gap-2
         (if connected?
-          [:button.btn-secondary
+          [:button.btn.btn-secondary
            {:on {:click [[::device.db/disconnect]]}}
            "Disconnect"]
-          [:button.btn-primary
+          [:button.btn.btn-primary
            {:on {:click [[::device.db/connect]]}}
            "Connect Device"])]]
 
       (when connected?
         [:div.pt-4.border-t.border-slate-200
          [:h3.text-sm.font-medium.text-slate-900.mb-2 "Test Communication"]
-         [:button.btn-ghost
+         [:button.btn.btn-ghost
           {:on {:click [[::device.db/send-data "Hello from browser!\n"]]}}
           "Send Test Message"]])]]))
