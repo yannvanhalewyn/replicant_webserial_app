@@ -24,6 +24,20 @@
          (configuration/new-configuration (::configurations.db/configurations state))
          ::configurations.db/validation-errors nil))}]
 
+   ["/configurations/:id"
+    {:name :configurations.routes/show
+     :breadcrumbs [{:label "Home" :href "/"}
+                   {:label "Configurations" :route [:configurations.routes/index]}
+                   {:label "Configuration"}]
+     :render configurations.views/show-page
+     :parameters {:path [:map [:id :uuid]]}
+     :on-mount
+     (fn [match state]
+       (let [id (get-in match [:parameters :path :id])]
+         (assoc state
+           ::configurations.db/current-configuration
+           (get-in state [::configurations.db/configurations id]))))}]
+
    ["/configurations/:id/edit"
     {:name :configurations.routes/edit
      :breadcrumbs [{:label "Home" :href "/"}

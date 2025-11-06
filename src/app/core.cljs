@@ -40,7 +40,8 @@
     (fn [_ _ _ _]
       (render!)))
   (rfe/start!
-    (rf/router routes {:data {:coercion rcm/coercion}})
+    (rf/router routes {:data {:coercion rcm/coercion}
+                       :conflicts nil})
     on-navigate
     {:use-fragment false})
   (render!))

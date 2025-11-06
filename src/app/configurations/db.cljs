@@ -2,6 +2,7 @@
   (:require
     [app.configurations.configuration :as configuration]
     [app.db :as db]
+    [app.device.db :as device.db]
     [app.tools.utils :as u]))
 
 (def ^:private STORAGE_KEY "demo-app-configurations")
@@ -36,3 +37,18 @@
   (let [new-db (u/dissoc-in db [::configurations config-id])]
     [[:db/save new-db]
      [:storage/save STORAGE_KEY (::configurations new-db)]]))
+
+(defn- serialize-configuration
+  "Serializes a configuration to a string format for sending to device."
+  [config]
+  (str "CONFIG:"
+    "MIN_FREQ=" (:configuration/min-frequency config) ","
+    "MAX_FREQ=" (:configuration/max-frequency config) ","
+    "VOLUME=" (:configuration/volume config)
+    "\n"))
+
+(defmethod db/action->effects ::send-to-device
+  [{:keys [db]} [_ config]]
+  (when (device.db/connected? db)
+    (let [serialized (serialize-configuration config)]
+      [[::device.db/send-data serialized]])))

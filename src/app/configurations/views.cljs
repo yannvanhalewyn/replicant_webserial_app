@@ -2,34 +2,40 @@
   (:require
    [app.configurations.configuration :as configuration]
    [app.configurations.db :as configurations.db]
+   [app.device.db :as device.db]
    [malli.core :as m]
    [malli.util :as mu]
    [reitit.frontend.easy :as rfe]))
 
 (defn- configuration-item [config]
   [:div.card-hover
-   [:div.flex.items-start.justify-between
-    [:div.flex-1
-     [:h3.text-lg.font-semibold.text-slate-900.mb-3
-      (:configuration/name config)]
-     [:div.space-y-2
-      [:div.flex.items-center.gap-2
-       [:span.text-sm.font-medium.text-slate-600 "Frequency Range:"]
-       [:span.text-sm.text-slate-900
-        (:configuration/min-frequency config) " Hz - "
-        (:configuration/max-frequency config) " Hz"]]
-      [:div.flex.items-center.gap-2
-       [:span.text-sm.font-medium.text-slate-600 "Volume:"]
-       [:span.text-sm.text-slate-900
-        (:configuration/volume config) "%"]]]]
-    [:div.flex.gap-2
-     [:a.btn.btn-ghost
-      {:href (rfe/href :configurations.routes/edit
-               {:id (:configuration/id config)})}
-      "Edit"]
-     [:button.btn.btn-danger
-      {:on {:click [[::configurations.db/delete (:configuration/id config)]]}}
-      "Delete"]]]])
+   [:a
+    {:href (rfe/href :configurations.routes/show
+             {:id (:configuration/id config)})}
+    [:div.flex.items-start.justify-between
+     [:div.flex-1
+      [:h3.text-lg.font-semibold.text-slate-900.mb-3
+       (:configuration/name config)]
+      [:div.space-y-2
+       [:div.flex.items-center.gap-2
+        [:span.text-sm.font-medium.text-slate-600 "Frequency Range:"]
+        [:span.text-sm.text-slate-900
+         (:configuration/min-frequency config) " Hz - "
+         (:configuration/max-frequency config) " Hz"]]
+       [:div.flex.items-center.gap-2
+        [:span.text-sm.font-medium.text-slate-600 "Volume:"]
+        [:span.text-sm.text-slate-900
+         (:configuration/volume config) "%"]]]]
+     [:div.flex.gap-2
+      [:a.btn.btn-ghost
+       {:href (rfe/href :configurations.routes/edit
+                {:id (:configuration/id config)})
+        :on {:click [[:event/stop-propagation]]}}
+       "Edit"]
+      [:button.btn.btn-danger
+       {:on {:click [[::configurations.db/delete (:configuration/id config)]
+                     [:event/stop-propagation]]}}
+       "Delete"]]]]])
 
 (defn list-page [state]
   (let [configurations (::configurations.db/configurations state)]
@@ -164,6 +170,48 @@
        [:div.text-4xl.mb-4 "❌"]
        [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
        [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
+        [:a.btn-ghost.inline-block
+         {:href (rfe/href :configurations.routes/index)}
+         "← Back to Configurations"]])))
+
+(defn show-page [state]
+  (let [current-config (::configurations.db/current-configuration state)
+        device-connected? (device.db/connected? state)]
+    (if current-config
+      [:div
+       [:div.flex.items-center.justify-between.mb-6
+        [:h1.text-3xl.font-bold.text-slate-900
+         (:configuration/name current-config)]
+        [:div.flex.gap-2
+         [:a.btn.btn-ghost
+          {:href (rfe/href :configurations.routes/edit
+                   {:id (:configuration/id current-config)})}
+          "Edit"]
+         (when device-connected?
+           [:button.btn.btn-primary
+            {:on {:click [[::configurations.db/send-to-device current-config]]}}
+            "Send to Device"])]]
+
+       [:div.card
+        [:h2.text-xl.font-semibold.text-slate-900.mb-4 "Configuration Details"]
+        [:div.space-y-4
+         [:div.flex.items-center.justify-between.border-b.border-slate-200.pb-3
+          [:span.text-sm.font-medium.text-slate-600 "Min Frequency"]
+          [:span.text-sm.text-slate-900.font-semibold
+           (:configuration/min-frequency current-config) " Hz"]]
+         [:div.flex.items-center.justify-between.border-b.border-slate-200.pb-3
+          [:span.text-sm.font-medium.text-slate-600 "Max Frequency"]
+          [:span.text-sm.text-slate-900.font-semibold
+           (:configuration/max-frequency current-config) " Hz"]]
+         [:div.flex.items-center.justify-between
+          [:span.text-sm.font-medium.text-slate-600 "Volume"]
+          [:span.text-sm.text-slate-900.font-semibold
+           (:configuration/volume current-config) " %"]]]]]
+      [:div.empty-state
+       [:div.text-4xl.mb-4 "❌"]
+       [:h3.text-lg.font-medium.text-slate-900.mb-2 "Configuration not found"]
+       [:p.text-slate-600.mb-6 "The configuration you're looking for doesn't exist"]
        [:a.btn-ghost.inline-block
         {:href (rfe/href :configurations.routes/index)}
         "← Back to Configurations"]])))
+
