@@ -4,10 +4,7 @@
 
 (defonce app-db
   (atom {:serial-status "Not Connected"
-         ::current-route nil
-         ::configurations (storage/load-configurations)
-         ::editing-configuration nil
-         ::validation-errors nil}))
+         ::configurations (storage/load-configurations)}))
 
 (defmulti execute-action
   (fn [_event-data event-vec]

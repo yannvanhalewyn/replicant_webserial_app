@@ -10,4 +10,4 @@
        [:div
         [:h1 "Configuration Panel"]
         [:p "Please connect to your device"]
-        (device.views/device-status state)])}]])
+        (device.views/connection-status state)])}]])

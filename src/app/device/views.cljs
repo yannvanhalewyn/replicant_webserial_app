@@ -2,7 +2,7 @@
   (:require
     [app.device.db :as device.db]))
 
-(defn device-status [state]
+(defn connection-status [state]
   (list
    [:div.status
     [:strong "Serial Status: "]

@@ -36,7 +36,7 @@
      [:h1 "Configurations"]
      [:p "Manage your device configurations here."]
 
-     (device.views/device-status state)
+     (device.views/connection-status state)
 
      [:div {:style {:margin "2rem 0"}}
       [:a {:href (rfe/href :configurations.routes/new)}
@@ -115,22 +115,22 @@
      "Save"]]])
 
 (defn new-page [state]
-  (let [current-config (::db/editing-configuration state)]
+  (let [current-config (::configurations.db/current-configuration state)]
     [:div
      [:h1 "New Configuration"]
      (form
        {:config current-config
-        :validation-errors (::db/validation-errors state)
+        :validation-errors (::configurations.db/validation-errors state)
         :on-save [[::configurations.db/save current-config]]})]))
 
 (defn edit-page [state]
-  (let [editing-config (::db/editing-configuration state)
-        validation-errors (::db/validation-errors state)]
-    (if editing-config
+  (let [current-config (::configurations.db/current-configuration state)
+        validation-errors (::configurations.db/validation-errors state)]
+    (if current-config
       [:div
        [:h1 "Edit Configuration"]
        (form
-         {:config editing-config
+         {:config current-config
           :validation-errors validation-errors
-          :on-save [[::configurations.db/save editing-config]]}) ]
+          :on-save [[::configurations.db/save current-config]]}) ]
       [:div "Configuration not found"])))

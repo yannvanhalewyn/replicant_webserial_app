@@ -48,10 +48,7 @@
             s' (assoc s ::db/current-route new-match)]
         (if on-mount
           (on-mount new-match s')
-          ;; Clear editing state for routes without on-mount
-          (assoc s'
-            ::db/editing-configuration nil
-            ::db/validation-errors nil))))))
+          s')))))
 
 (defn init! []
   (add-watch db/app-db ::render

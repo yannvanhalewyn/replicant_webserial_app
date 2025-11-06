@@ -1,6 +1,7 @@
 (ns app.configurations.routes
   (:require
    [app.configurations.configuration :as configuration]
+   [app.configurations.db :as configurations.db]
    [app.configurations.views :as configurations.views]
    [app.db :as db]))
 
@@ -15,9 +16,9 @@
      :on-mount
      (fn [_match state]
        (assoc state
-         ::db/editing-configuration
+         ::configurations.db/current-configuration
          (configuration/new-configuration (::db/configurations state))
-         ::db/validation-errors nil))}]
+         ::configurations.db/validation-errors nil))}]
 
    ["/configurations/:id/edit"
     {:name :configurations.routes/edit
@@ -27,6 +28,6 @@
      (fn [match state]
        (let [id (get-in match [:parameters :path :id])]
          (assoc state
-           ::db/editing-configuration
+           ::configurations.db/current-configuration
            (get-in state [::db/configurations id])
-           ::db/validation-errors nil)))}]])
+           ::configurations.db/validation-errors nil)))}]])

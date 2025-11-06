@@ -9,16 +9,16 @@
   [_event-data [_ field value]]
   (swap! db/app-db
     (fn [s]
-      (let [new-config (assoc (::db/editing-configuration s) field value)]
+      (let [new-config (assoc (::current-configuration s) field value)]
         (assoc s
-          ::db/editing-configuration new-config
-          ::db/validation-errors (configuration/validate new-config))))))
+          ::current-configuration new-config
+          ::validation-errors (configuration/validate new-config))))))
 
 (defmethod db/execute-action ::save
   [_event-data [_ config]]
   (let [validation-result (configuration/validate config)]
     (if validation-result
-      (swap! db/app-db assoc ::db/validation-errors validation-result)
+      (swap! db/app-db assoc ::validation-errors validation-result)
       (do
         (swap! db/app-db
           (fn [s]
@@ -28,8 +28,9 @@
               (storage/save-configurations! configs)
               (-> s
                 (assoc-in [::db/configurations (:configuration/id config)] config)
-                (assoc ::db/editing-configuration nil)
-                (assoc ::db/validation-errors nil)))))
+                (assoc
+                  ::current-configuration nil
+                  ::validation-errors nil)))))
         (rfe/push-state :configurations.routes/index)))))
 
 (defmethod db/execute-action ::delete
