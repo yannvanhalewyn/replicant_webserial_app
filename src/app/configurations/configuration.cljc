@@ -3,7 +3,8 @@
   (:require
     [app.tools.utils :as u]
     [malli.core :as m]
-    [malli.error :as me]))
+    [malli.error :as me]
+    [malli.util :as mu]))
 
 (def BaseSchema
   [:map
@@ -47,11 +48,15 @@
                             1))))
 
 (defn new-configuration [configurations]
-  {:configuration/id (random-uuid)
-   :configuration/name (new-configuration-name configurations)
-   :configuration/min-frequency 0
-   :configuration/max-frequency 20000
-   :configuration/volume 100})
+  (letfn [(schema-prop [schema-key prop-key]
+            (-> (mu/get BaseSchema schema-key)
+              (m/properties)
+              (get prop-key)))]
+    {:configuration/id (random-uuid)
+     :configuration/name (new-configuration-name configurations)
+     :configuration/min-frequency (schema-prop :configuration/min-frequency :min)
+     :configuration/max-frequency (schema-prop :configuration/max-frequency :max)
+     :configuration/volume (schema-prop :configuration/volume :max)}))
 
 (defn serialize
   "Serializes a configuration to a string format for sending to device."

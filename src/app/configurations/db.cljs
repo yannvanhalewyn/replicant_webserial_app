@@ -22,7 +22,7 @@
   [{:keys [db]} [_ config]]
   (let [errors (configuration/validate config)]
     (if errors
-      [[:db/save (assoc db ::validation-errors errors)]]
+      [[:db/assoc-in [::validation-errors] errors]]
       (let [new-db (-> db
                      (assoc-in [::configurations (:configuration/id config)] config)
                      (assoc
