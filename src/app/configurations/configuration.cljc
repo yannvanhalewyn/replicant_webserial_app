@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [new])
   (:require
     [app.tools.utils :as u]
-    [malli.core :as m]))
+    [malli.core :as m]
+    [malli.error :as me]))
 
 (def Configuration
   (m/schema
@@ -40,21 +41,22 @@
    :configuration/max-frequency 20000
    :configuration/volume 100})
 
-(defn validate
-  "Validates a configuration. Returns nil if valid, or a map with :errors if invalid."
-  [config]
-  (when-not (m/validate Configuration config)
-    (m/explain Configuration config)))
-
 (defn valid?
   "Returns true if the configuration is valid."
   [config]
   (m/validate Configuration config))
+
+(defn validate
+  "Validates a configuration. Returns nil if valid, or a map with :errors if invalid."
+  [config]
+  (when-not (valid? config)
+    (me/humanize (m/explain Configuration config))))
 
 (comment
   (new-configuration {"1" {:configuration/name "Configuration 4"}})
   (valid? (new-configuration {}))
   (validate (assoc (new-configuration {}) :configuration/min-frequency -1))
   (validate (assoc (new-configuration {})
+              :configuration/name ""
               :configuration/min-frequency 1000
               :configuration/max-frequency 10)))

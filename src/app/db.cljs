@@ -105,7 +105,7 @@
 (defn dispatch!
   "Interpolates the actions, extrapolates and then runs effects"
   [event-data actions]
-  (js/console.log :dispatch! event-data actions)
+  ;;(js/console.log :dispatch! event-data actions)
   (let [db @app-db
         effects (->> (interpolate event-data actions)
                   (mapcat #(action->effects {:db db} %)))]

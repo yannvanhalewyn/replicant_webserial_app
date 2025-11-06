@@ -35,13 +35,14 @@
   (db/dispatch! {} [[:route/on-navigate new-match]]))
 
 (defn init! []
+  (db/dispatch! {} [[::configurations.db/init]])
   (add-watch db/app-db ::render
-    (fn [_ _ _ _] (render!)))
+    (fn [_ _ _ _]
+      (render!)))
   (rfe/start!
     (rf/router routes {:data {:coercion rcm/coercion}})
     on-navigate
     {:use-fragment false})
-  (db/dispatch! {} [[::configurations.db/init]])
   (render!))
 
 (defn reload! []
