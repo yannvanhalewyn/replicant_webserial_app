@@ -12,7 +12,8 @@
 (defmethod db/action->effects ::connect
   [_ _]
   [[::connect
-    {:on-success [[:db/assoc-in [::connection] [::new-connection]]]}]])
+    {:on-success [[:db/assoc-in-batch [[[::connection] [::new-connection]]
+                                       [[::error] nil]]]]}]])
 
 (defmethod db/execute-effect! ::connect
   [_event-data [_ {:keys [on-success]}]]
